@@ -18,9 +18,9 @@ object BatchMergeWithRecordSpeed {
   private val END_DAY: String = "end_day"
   private val BATCH_SIZE: String = "batch_size"
 
-  val dataFormat: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+  private val dataFormat: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
-  val modelToTables: Map[String, Array[String]] = Map(
+  private val modelToTables: Map[String, Array[String]] = Map(
     "103251" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_103251", "czods.s_qara_103251_1hz", "czods.s_qara_103251_2hz", "czods.s_qara_103251_4hz", "czods.s_qara_103251_8hz", "czods.s_qara_103251_p25hz", "czods.s_qara_103251_p5hz"),
     "10410" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_10410", "czods.s_qara_10410_16hz", "czods.s_qara_10410_1hz", "czods.s_qara_10410_2hz", "czods.s_qara_10410_32hz", "czods.s_qara_10410_4hz", "czods.s_qara_10410_8hz", "czods.s_qara_10410_p25hz", "czods.s_qara_10410_p5hz"),
     "10411" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_10411", "czods.s_qara_10411_16hz", "czods.s_qara_10411_1hz", "czods.s_qara_10411_2hz", "czods.s_qara_10411_32hz", "czods.s_qara_10411_4hz", "czods.s_qara_10411_8hz", "czods.s_qara_10411_p25hz", "czods.s_qara_10411_p5hz"),
