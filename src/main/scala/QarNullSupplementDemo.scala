@@ -62,12 +62,21 @@ object QarNullSupplementDemo {
 
   private def dealPH5HZ(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_p5hz_fillup;")
-    spark.sql("create table qara_mid.mid_qara_320020_p5hz_fillup (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT, `aie1_rw` INT, `aie2_rw` INT, `aiwl` INT, `aiwr` INT, `ai_faul1` INT, `ai_faul2` INT, `flaprw` FLOAT, `glide_dev1` FLOAT, `glide_dev2` FLOAT, `hyd_l_pres_b` INT, `hyd_l_pres_g` INT, `hyd_l_pres_y` INT, `loc_dev1` FLOAT, `loc_dev2` FLOAT, `n1_epr_cmd1` INT, `n1_epr_cmd2` INT, `n1_mod_sel1` INT, `n1_mod_sel2` INT, `pck_1_fl_ctl` INT, `pck_2_fl_ctl` INT, `ralt1` FLOAT, `ralt2` FLOAT, `tat` FLOAT) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_p5hz_fillup'")
+    spark.sql(
+    """create table qara_mid.mid_qara_320020_p5hz_fillup (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`aie1_rw` INT, `aie2_rw` INT, `aiwl` INT, `aiwr` INT, `ai_faul1` INT, `ai_faul2` INT, `flaprw` FLOAT,
+        |`glide_dev1` FLOAT, `glide_dev2` FLOAT, `hyd_l_pres_b` INT, `hyd_l_pres_g` INT, `hyd_l_pres_y` INT,
+        |`loc_dev1` FLOAT, `loc_dev2` FLOAT, `n1_epr_cmd1` INT, `n1_epr_cmd2` INT, `n1_mod_sel1` INT,
+        |`n1_mod_sel2` INT, `pck_1_fl_ctl` INT, `pck_2_fl_ctl` INT, `ralt1` FLOAT, `ralt2` FLOAT, `tat` FLOAT
+        |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_p5hz_fillup'
+        |""".stripMargin)
     partitionList.forEach(partition => {
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
-//      val sqlDemo = s"insert into  qara_mid.mid_qara_320020_p5hz_fillup  select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series, COALESCE(t0.aie1_rw,t1.aie1_rw) as aie1_rw,COALESCE(t0.aie2_rw,t1.aie2_rw) as aie2_rw,COALESCE(t0.aiwl,t1.aiwl) as aiwl,COALESCE(t0.aiwr,t1.aiwr) as aiwr,COALESCE(t0.ai_faul1,t1.ai_faul1) as ai_faul1,COALESCE(t0.ai_faul2,t1.ai_faul2) as ai_faul2,COALESCE(t0.flaprw,t1.flaprw) as flaprw,COALESCE(t0.glide_dev1,t1.glide_dev1) as glide_dev1,COALESCE(t0.glide_dev2,t1.glide_dev2) as glide_dev2,COALESCE(t0.hyd_l_pres_b,t1.hyd_l_pres_b) as hyd_l_pres_b,COALESCE(t0.hyd_l_pres_g,t1.hyd_l_pres_g) as hyd_l_pres_g,COALESCE(t0.hyd_l_pres_y,t1.hyd_l_pres_y) as hyd_l_pres_y,COALESCE(t0.loc_dev1,t1.loc_dev1) as loc_dev1,COALESCE(t0.loc_dev2,t1.loc_dev2) as loc_dev2,COALESCE(t0.n1_epr_cmd1,t1.n1_epr_cmd1) as n1_epr_cmd1,COALESCE(t0.n1_epr_cmd2,t1.n1_epr_cmd2) as n1_epr_cmd2,COALESCE(t0.n1_mod_sel1,t1.n1_mod_sel1) as n1_mod_sel1,COALESCE(t0.n1_mod_sel2,t1.n1_mod_sel2) as n1_mod_sel2,COALESCE(t0.pck_1_fl_ctl,t1.pck_1_fl_ctl) as pck_1_fl_ctl,COALESCE(t0.pck_2_fl_ctl,t1.pck_2_fl_ctl) as pck_2_fl_ctl,COALESCE(t0.ralt1,t1.ralt1) as ralt1,COALESCE(t0.ralt2,t1.ralt2) as ralt2,COALESCE(t0.tat,t1.tat) as tatfrom (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*     from  czods.s_qara_320020_p5hz where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo' ) t0 left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*    from  czods.s_qara_320020_p5hz      where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t1on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add;"
+//      val sqlDemo = s"insert into  qara_mid.mid_qara_320020_p5hz_fillup  select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series, COALESCE(t0.aie1_rw,t1.aie1_rw) as aie1_rw,COALESCE(t0.aie2_rw,t1.aie2_rw) as aie2_rw,COALESCE(t0.aiwl,t1.aiwl) as aiwl,COALESCE(t0.aiwr,t1.aiwr) as aiwr,COALESCE(t0.ai_faul1,t1.ai_faul1) as ai_faul1,COALESCE(t0.ai_faul2,t1.ai_faul2) as ai_faul2,COALESCE(t0.flaprw,t1.flaprw) as flaprw,COALESCE(t0.glide_dev1,t1.glide_dev1) as glide_dev1,COALESCE(t0.glide_dev2,t1.glide_dev2) as glide_dev2,COALESCE(t0.hyd_l_pres_b,t1.hyd_l_pres_b) as hyd_l_pres_b,COALESCE(t0.hyd_l_pres_g,t1.hyd_l_pres_g) as hyd_l_pres_g,COALESCE(t0.hyd_l_pres_y,t1.hyd_l_pres_y) as hyd_l_pres_y,COALESCE(t0.loc_dev1,t1.loc_dev1) as loc_dev1,COALESCE(t0.loc_dev2,t1.loc_dev2) as loc_dev2,COALESCE(t0.n1_epr_cmd1,t1.n1_epr_cmd1) as n1_epr_cmd1,COALESCE(t0.n1_epr_cmd2,t1.n1_epr_cmd2) as n1_epr_cmd2,COALESCE(t0.n1_mod_sel1,t1.n1_mod_sel1) as n1_mod_sel1,COALESCE(t0.n1_mod_sel2,t1.n1_mod_sel2) as n1_mod_sel2,COALESCE(t0.pck_1_fl_ctl,t1.pck_1_fl_ctl) as pck_1_fl_ctl,COALESCE(t0.pck_2_fl_ctl,t1.pck_2_fl_ctl) as pck_2_fl_ctl,COALESCE(t0.ralt1,t1.ralt1) as ralt1,COALESCE(t0.ralt2,t1.ralt2) as ralt2,COALESCE(t0.tat,t1.tat) as tatfrom (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*     from  czods.s_qara_320020_p5hz where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo' ) t0 left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*    from  czods.s_qara_320020_p5hz      where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t1on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add;"
       val sqlDemo =
         s"""insert into  qara_mid.mid_qara_320020_p5hz_fillup
            |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
@@ -93,14 +102,14 @@ object QarNullSupplementDemo {
            |, COALESCE(t0.pck_2_fl_ctl,t1.pck_2_fl_ctl) as pck_2_fl_ctl
            |, COALESCE(t0.ralt1,t1.ralt1) as ralt1
            |, COALESCE(t0.ralt2,t1.ralt2) as ralt2
-           |, COALESCE(t0.tat,t1.tat) as tatfrom
+           |, COALESCE(t0.tat,t1.tat) as tat from
            | (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
            |   from  czods.s_qara_320020_p5hz
-           |   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo' ) t0
+           |   where flt_dt='$fltDt' and tail_num='$tailNum'' and file_no='$fileNo' ) t0
            | left join (
            | select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*
            |  from  czods.s_qara_320020_p5hz
-           |   where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t1
+           |   where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t1
            |   on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
            |""".stripMargin
       spark.sql(sqlDemo)
@@ -352,18 +361,18 @@ object QarNullSupplementDemo {
            |, COALESCE(t0.year_med,t1.year_med,t2.year_med,t3.year_med) as year_med
            |from (
            |  select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
-           |   from  czods.s_qara_320020_p25hz  where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo') t0
+           |   from  czods.s_qara_320020_p25hz  where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo') t0
            | left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) )+1 as row_id_add,*
-           |  from  czods.s_qara_320020_p25hz  where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'  ) t1
+           |  from  czods.s_qara_320020_p25hz  where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'  ) t1
            |  on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
            | left join
            |   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*
            |   from czods.s_qara_320020_p25hz
-           |   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'  ) t2
+           |   where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'  ) t2
            |   on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add
            | left join
            |   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*
-           |    from  czods.s_qara_320020_p25hz where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'  ) t3
+           |    from  czods.s_qara_320020_p25hz where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'  ) t3
            |    on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add; """.stripMargin
       spark.sql(sqlDemo)
 
@@ -372,28 +381,198 @@ object QarNullSupplementDemo {
 
   private def deal1hzTableData(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_1hz_fillup;")
-    spark.sql("create table if not exists qara_mid.mid_qara_320020_1hz_fillup (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT, `aapp` INT, `aapp_td` INT, `ac_tail1` STRING, `ac_tail2` STRING, `ac_tail3` STRING, `ac_type` INT, `ac_type_csn` INT, `aie1` INT, `aie2` INT, `aill` FLOAT, `ailr` FLOAT, `air_durn` INT, `aiw` INT, `alpha_floor` INT, `alt_const` FLOAT, `alt_qnh` INT, `alt_qnh_csn` INT, `alt_qnh_ld` FLOAT, `alt_qnh_to` FLOAT, `alt_sel` FLOAT, `alt_sel_csn` FLOAT, `alt_std` FLOAT, `alt_stdc` FLOAT, `alt_stdc_csn` FLOAT, `aoal` FLOAT, `aoar` FLOAT, `apu_on` INT, `apu_on_csn` INT, `ap_egd1` INT, `ap_egd1_csn` INT, `ap_egd2` INT, `ap_egd2_csn` INT, `ap_off` INT, `ap_off_csn` INT, `arp_dist_dest` FLOAT, `arp_dist_dest_csn` FLOAT, `arp_dist_orig` FLOAT, `arp_heigh_dest` FLOAT, `arp_heigh_orig` FLOAT, `ats_active` INT, `ats_egd` INT, `ats_egdoract_csn` INT, `ats_egd_csn` INT, `ats_ret_mod` INT, `ats_spd_mach` INT, `ats_thrustn1` INT, `auto_brk_flt` INT, `auto_brk_off` INT, `auto_land_wn` INT, `auto_v2` INT, `b3d_day` INT, `b3d_hour` INT, `b3d_min` INT, `b3d_month` INT, `badsf_nr` INT, `baromb` FLOAT, `bea_mk` INT, `brk_pdll` FLOAT, `brk_ped_rh` FLOAT, `cab_prs_war` INT, `city_from_r_csn` STRING, `city_to` STRING, `city_to_r_csn` STRING, `ck_alt_sel` FLOAT, `ck_alt_std` FLOAT, `ck_c1_r1_col` INT, `ck_c1_r1_txt` INT, `ck_c1_r3_col` INT, `ck_c1_r3_txt` INT, `ck_c2_r1_col` INT, `ck_c2_r1_txt` INT, `ck_c2_r2_col` INT, `ck_c2_r2_txt` INT, `ck_c2_r3_col` INT, `ck_c2_r3_txt` INT, `ck_c3_r1_col` INT, `ck_c3_r1_txt` INT, `ck_c3_r2_col` INT, `ck_c3_r2_txt` INT, `ck_c4_r1_col` INT, `ck_c4_r1_txt` INT, `ck_c4_r2_col` INT, `ck_c4_r2_txt` INT, `ck_c4_r3_col` INT, `ck_c4_r3_txt` INT, `ck_c5_r1_col` INT, `ck_c5_r1_txt` INT, `ck_c5_r2_col` INT, `ck_c5_r2_txt` INT, `ck_c5_r3_col` INT, `ck_c5_r3_txt` INT, `ck_conf_pos` INT, `ck_conf_pos_pc` FLOAT, `ck_egt1` FLOAT, `ck_egt2` FLOAT, `ck_epr1` FLOAT, `ck_epr2` FLOAT, `ck_flap_spd` FLOAT, `ck_fqty` FLOAT, `ck_gpws_mode` INT, `ck_gw` FLOAT, `ck_head` FLOAT, `ck_head_mag` FLOAT, `ck_head_sel` FLOAT, `ck_head_selon` INT, `ck_ias` FLOAT, `ck_ldg_seldw` INT, `ck_ldg_wow` INT, `ck_mach` FLOAT, `ck_mas_war` INT, `ck_n11` FLOAT, `ck_n12` FLOAT, `ck_n21` FLOAT, `ck_n22` FLOAT, `ck_ralt` FLOAT, `ck_rev_dep1` INT, `ck_rev_dep2` INT, `ck_spd_brk` INT, `ck_tcas_ra` INT, `ck_tcas_ta` INT, `ck_tla_pct1` INT, `ck_tla_pct2` INT, `ck_v1` FLOAT, `ck_v2` FLOAT, `ck_vapp` FLOAT, `ck_vhf1_emit` INT, `ck_vls` FLOAT, `ck_vmax` FLOAT, `ck_vr` FLOAT, `conf` INT, `conf_csn` INT, `conf_ld` INT, `conf_to` INT, `cut` INT, `date` INT, `date_r` INT, `date_r_csn` INT, `date_to` INT, `dat_year` FLOAT, `day_ld` INT, `day_to` INT, `debug` INT, `destination` STRING, `dev_mag` FLOAT, `dfc_csn` INT, `dfc_pos_cfa` INT, `dist` FLOAT, `dist0` FLOAT, `dist_lat_td` FLOAT, `dist_ldg` FLOAT, `dist_ldg_csn` FLOAT, `dist_ldg_from_gs` FLOAT, `dist_pthr` FLOAT, `dist_to` FLOAT, `drift_csn` FLOAT, `dual_input` INT, `durn_200_ld` INT, `durn_txo` FLOAT, `egt1` FLOAT, `egt1c` FLOAT, `egt1c_csn` FLOAT, `egt1_csn` FLOAT, `egt2` FLOAT, `egt2c` FLOAT, `egt2c_csn` FLOAT, `egt2_csn` FLOAT, `egt_max` FLOAT, `elevl` FLOAT, `elevr` FLOAT, `eng1_severit` INT, `eng2_severit` INT, `eng_man` INT, `epr1` FLOAT, `epr1c` FLOAT, `epr1_csn` FLOAT, `epr2` FLOAT, `epr2c` FLOAT, `epr2_csn` FLOAT, `epr_cmd_1` FLOAT, `epr_cmd_2` FLOAT, `epr_tgt1` FLOAT, `evt_mk` INT, `fburn` FLOAT, `fburn1` FLOAT, `fburn1_txo` FLOAT, `fburn2` FLOAT, `fburn2_txo` FLOAT, `fburn3_txo` FLOAT, `fburn4_txo` FLOAT, `fburn_avg` FLOAT, `fburn_ti` FLOAT, `fburn_txo` FLOAT, `fburn_txo_avg` FLOAT, `fd_1` INT, `fd_2` INT, `ff1` FLOAT, `ff1c` FLOAT, `ff1_csn` FLOAT, `ff2` FLOAT, `ff2c` FLOAT, `ff2_csn` FLOAT, `fire1` INT, `fire2` INT, `fire_apu` INT, `flap` FLOAT, `flapc` FLOAT, `flapc_csn` FLOAT, `flap_spd` FLOAT, `flight_chang` INT, `flight_ident` INT, `flight_input` INT, `flight_no1` STRING, `flight_no1_csn` STRING, `flight_no2` STRING, `flight_no2_csn` STRING, `flight_phase` INT, `flight_phase_csn` INT, `flight_recogn` INT, `flight_type` INT, `flt_path_angl` FLOAT, `flt_path_angl_csn` FLOAT, `fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT, `fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT, `gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT, `glide_dev_min` FLOAT) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_1hz_fillup'")
+    spark.sql(
+      """create table if not exists qara_mid.mid_qara_320020_1hz_fillup (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`aapp` INT, `aapp_td` INT, `ac_tail1` STRING, `ac_tail2` STRING, `ac_tail3` STRING,
+        |`ac_type` INT, `ac_type_csn` INT, `aie1` INT, `aie2` INT, `aill` FLOAT, `ailr` FLOAT,
+        |`air_durn` INT, `aiw` INT, `alpha_floor` INT, `alt_const` FLOAT, `alt_qnh` INT,
+        |`alt_qnh_csn` INT, `alt_qnh_ld` FLOAT, `alt_qnh_to` FLOAT, `alt_sel` FLOAT, `alt_sel_csn` FLOAT,
+        |`alt_std` FLOAT, `alt_stdc` FLOAT, `alt_stdc_csn` FLOAT, `aoal` FLOAT, `aoar` FLOAT, `apu_on` INT,
+        |`apu_on_csn` INT, `ap_egd1` INT, `ap_egd1_csn` INT, `ap_egd2` INT, `ap_egd2_csn` INT, `ap_off` INT,
+        |`ap_off_csn` INT, `arp_dist_dest` FLOAT, `arp_dist_dest_csn` FLOAT, `arp_dist_orig` FLOAT,
+        |`arp_heigh_dest` FLOAT, `arp_heigh_orig` FLOAT, `ats_active` INT, `ats_egd` INT,
+        |`ats_egdoract_csn` INT, `ats_egd_csn` INT, `ats_ret_mod` INT, `ats_spd_mach` INT,
+        |`ats_thrustn1` INT, `auto_brk_flt` INT, `auto_brk_off` INT, `auto_land_wn` INT, `auto_v2` INT,
+        |`b3d_day` INT, `b3d_hour` INT, `b3d_min` INT, `b3d_month` INT, `badsf_nr` INT, `baromb` FLOAT,
+        |`bea_mk` INT, `brk_pdll` FLOAT, `brk_ped_rh` FLOAT, `cab_prs_war` INT, `city_from_r_csn` STRING,
+        |`city_to` STRING, `city_to_r_csn` STRING, `ck_alt_sel` FLOAT, `ck_alt_std` FLOAT, `ck_c1_r1_col` INT,
+        |`ck_c1_r1_txt` INT, `ck_c1_r3_col` INT, `ck_c1_r3_txt` INT, `ck_c2_r1_col` INT, `ck_c2_r1_txt` INT,
+        |`ck_c2_r2_col` INT, `ck_c2_r2_txt` INT, `ck_c2_r3_col` INT, `ck_c2_r3_txt` INT, `ck_c3_r1_col` INT,
+        |`ck_c3_r1_txt` INT, `ck_c3_r2_col` INT, `ck_c3_r2_txt` INT, `ck_c4_r1_col` INT, `ck_c4_r1_txt` INT,
+        |`ck_c4_r2_col` INT, `ck_c4_r2_txt` INT, `ck_c4_r3_col` INT, `ck_c4_r3_txt` INT, `ck_c5_r1_col` INT,
+        |`ck_c5_r1_txt` INT, `ck_c5_r2_col` INT, `ck_c5_r2_txt` INT, `ck_c5_r3_col` INT, `ck_c5_r3_txt` INT,
+        |`ck_conf_pos` INT, `ck_conf_pos_pc` FLOAT, `ck_egt1` FLOAT, `ck_egt2` FLOAT, `ck_epr1` FLOAT,
+        |`ck_epr2` FLOAT, `ck_flap_spd` FLOAT, `ck_fqty` FLOAT, `ck_gpws_mode` INT, `ck_gw` FLOAT,
+        |`ck_head` FLOAT, `ck_head_mag` FLOAT, `ck_head_sel` FLOAT, `ck_head_selon` INT, `ck_ias` FLOAT,
+        |`ck_ldg_seldw` INT, `ck_ldg_wow` INT, `ck_mach` FLOAT, `ck_mas_war` INT, `ck_n11` FLOAT,
+        |`ck_n12` FLOAT, `ck_n21` FLOAT, `ck_n22` FLOAT, `ck_ralt` FLOAT, `ck_rev_dep1` INT, `ck_rev_dep2` INT,
+        |`ck_spd_brk` INT, `ck_tcas_ra` INT, `ck_tcas_ta` INT, `ck_tla_pct1` INT, `ck_tla_pct2` INT,
+        |`ck_v1` FLOAT, `ck_v2` FLOAT, `ck_vapp` FLOAT, `ck_vhf1_emit` INT, `ck_vls` FLOAT,
+        |`ck_vmax` FLOAT, `ck_vr` FLOAT, `conf` INT, `conf_csn` INT, `conf_ld` INT, `conf_to` INT,
+        |`cut` INT, `date` INT, `date_r` INT, `date_r_csn` INT, `date_to` INT, `dat_year` FLOAT,
+        |`day_ld` INT, `day_to` INT, `debug` INT, `destination` STRING, `dev_mag` FLOAT, `dfc_csn` INT,
+        |`dfc_pos_cfa` INT, `dist` FLOAT, `dist0` FLOAT, `dist_lat_td` FLOAT, `dist_ldg` FLOAT,
+        |`dist_ldg_csn` FLOAT, `dist_ldg_from_gs` FLOAT, `dist_pthr` FLOAT, `dist_to` FLOAT, `drift_csn` FLOAT,
+        |`dual_input` INT, `durn_200_ld` INT, `durn_txo` FLOAT, `egt1` FLOAT, `egt1c` FLOAT, `egt1c_csn` FLOAT,
+        |`egt1_csn` FLOAT, `egt2` FLOAT, `egt2c` FLOAT, `egt2c_csn` FLOAT, `egt2_csn` FLOAT, `egt_max` FLOAT,
+        |`elevl` FLOAT, `elevr` FLOAT, `eng1_severit` INT, `eng2_severit` INT, `eng_man` INT, `epr1` FLOAT,
+        |`epr1c` FLOAT, `epr1_csn` FLOAT, `epr2` FLOAT, `epr2c` FLOAT, `epr2_csn` FLOAT, `epr_cmd_1` FLOAT,
+        |`epr_cmd_2` FLOAT, `epr_tgt1` FLOAT, `evt_mk` INT, `fburn` FLOAT, `fburn1` FLOAT, `fburn1_txo` FLOAT,
+        |`fburn2` FLOAT, `fburn2_txo` FLOAT, `fburn3_txo` FLOAT, `fburn4_txo` FLOAT, `fburn_avg` FLOAT,
+        |`fburn_ti` FLOAT, `fburn_txo` FLOAT, `fburn_txo_avg` FLOAT, `fd_1` INT, `fd_2` INT, `ff1` FLOAT,
+        |`ff1c` FLOAT, `ff1_csn` FLOAT, `ff2` FLOAT, `ff2c` FLOAT, `ff2_csn` FLOAT, `fire1` INT,
+        |`fire2` INT, `fire_apu` INT, `flap` FLOAT, `flapc` FLOAT, `flapc_csn` FLOAT, `flap_spd` FLOAT,
+        |`flight_chang` INT, `flight_ident` INT, `flight_input` INT, `flight_no1` STRING, `flight_no1_csn` STRING,
+        |`flight_no2` STRING, `flight_no2_csn` STRING, `flight_phase` INT, `flight_phase_csn` INT,
+        |`flight_recogn` INT, `flight_type` INT, `flt_path_angl` FLOAT, `flt_path_angl_csn` FLOAT,
+        |`fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT,
+        |`fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT,
+        |`gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT,
+        |`glide_dev_min` FLOAT
+        |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_1hz_fillup'
+        |""".stripMargin)
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
-      val sqlDemo = s"insert into qara_mid.mid_qara_320020_1hz_fillup select file_no,flt_dt,tail_num,`time`,1,aapp,aapp_td,ac_tail1,ac_tail2,ac_tail3,ac_type,ac_type_csn,aie1,aie2,aill,ailr,air_durn,aiw,alpha_floor,alt_const,alt_qnh,alt_qnh_csn,alt_qnh_ld,alt_qnh_to,alt_sel,alt_sel_csn,alt_std,alt_stdc,alt_stdc_csn,aoal,aoar,apu_on,apu_on_csn,ap_egd1,ap_egd1_csn,ap_egd2,ap_egd2_csn,ap_off,ap_off_csn,arp_dist_dest,arp_dist_dest_csn,arp_dist_orig,arp_heigh_dest,arp_heigh_orig,ats_active,ats_egd,ats_egdoract_csn,ats_egd_csn,ats_ret_mod,ats_spd_mach,ats_thrustn1,auto_brk_flt,auto_brk_off,auto_land_wn,auto_v2,b3d_day,b3d_hour,b3d_min,b3d_month,badsf_nr,baromb,bea_mk,brk_pdll,brk_ped_rh,cab_prs_war,city_from_r_csn,city_to,city_to_r_csn,ck_alt_sel,ck_alt_std,ck_c1_r1_col,ck_c1_r1_txt,ck_c1_r3_col,ck_c1_r3_txt,ck_c2_r1_col,ck_c2_r1_txt,ck_c2_r2_col,ck_c2_r2_txt,ck_c2_r3_col,ck_c2_r3_txt,ck_c3_r1_col,ck_c3_r1_txt,ck_c3_r2_col,ck_c3_r2_txt,ck_c4_r1_col,ck_c4_r1_txt,ck_c4_r2_col,ck_c4_r2_txt,ck_c4_r3_col,ck_c4_r3_txt,ck_c5_r1_col,ck_c5_r1_txt,ck_c5_r2_col,ck_c5_r2_txt,ck_c5_r3_col,ck_c5_r3_txt,ck_conf_pos,ck_conf_pos_pc,ck_egt1,ck_egt2,ck_epr1,ck_epr2,ck_flap_spd,ck_fqty,ck_gpws_mode,ck_gw,ck_head,ck_head_mag,ck_head_sel,ck_head_selon,ck_ias,ck_ldg_seldw,ck_ldg_wow,ck_mach,ck_mas_war,ck_n11,ck_n12,ck_n21,ck_n22,ck_ralt,ck_rev_dep1,ck_rev_dep2,ck_spd_brk,ck_tcas_ra,ck_tcas_ta,ck_tla_pct1,ck_tla_pct2,ck_v1,ck_v2,ck_vapp,ck_vhf1_emit,ck_vls,ck_vmax,ck_vr,conf,conf_csn,conf_ld,conf_to,cut,`date`,date_r,date_r_csn,date_to,dat_year,day_ld,day_to,debug,destination,dev_mag,dfc_csn,dfc_pos_cfa,dist,dist0,dist_lat_td,dist_ldg,dist_ldg_csn,dist_ldg_from_gs,dist_pthr,dist_to,drift_csn,dual_input,durn_200_ld,durn_txo,egt1,egt1c,egt1c_csn,egt1_csn,egt2,egt2c,egt2c_csn,egt2_csn,egt_max,elevl,elevr,eng1_severit,eng2_severit,eng_man,epr1,epr1c,epr1_csn,epr2,epr2c,epr2_csn,epr_cmd_1,epr_cmd_2,epr_tgt1,evt_mk,fburn,fburn1,fburn1_txo,fburn2,fburn2_txo,fburn3_txo,fburn4_txo,fburn_avg,fburn_ti,fburn_txo,fburn_txo_avg,fd_1,fd_2,ff1,ff1c,ff1_csn,ff2,ff2c,ff2_csn,fire1,fire2,fire_apu,flap,flapc,flapc_csn,flap_spd,flight_chang,flight_ident,flight_input,flight_no1,flight_no1_csn,flight_no2,flight_no2_csn,flight_phase,flight_phase_csn,flight_recogn,flight_type,flt_path_angl,flt_path_angl_csn,fma_lat,fma_long,fpa_selected,fqty_ld,fqty_to,fr_count,fuel_fire_1,fuel_fire_2,gamax1000,gamax150,gamax500,gamin1000,gamin150,gamin500,glide_devc,glide_devc_csn,glide_dev_max,glide_dev_min,glide_gap,glide_ils,gpws_ctype,gpws_dont_sink,gpws_flap_low,gpws_gear_low,gpws_glide,gpws_mode,gpws_mode_csn,gpws_pull_up,gpws_sink_rate,gpws_tr_low,gpws_tr_up,gpws_war,gpws_wsh_war,gs,gsc,gsc1p,gsc_csn,gs_csn,gwc,gw_csn,gw_landing_lim,gw_ld,gw_takeoff_lim,gw_taxi_lim,gw_to,head,head_csn,head_lin,head_lin_csn,head_mag,head_sel,head_true,head_true_csn,height,height_csn,heig_1conf_chg,heig_dev_1000,heig_dev_500,heig_gear_dw,heig_lconf_chg,hf,hf_cfa,hp_fuel_vv_1,hp_fuel_vv_2,ias,iasc,iasc_csn,ias_app_1000,ias_app_50,ias_app_500,ias_bef_ld,ias_cl_1000,ias_cl_500,ias_csn,ias_ext_conf1,ias_ext_conf2,ias_ext_conf3,ias_ext_conf4,ias_ext_conf5,ias_ld,ias_max,ias_maxcnf1ld,ias_maxcnf2ld,ias_maxcnf3ld,ias_maxcnf4ld,ias_maxcnf5ld,ias_maxcnf6ld,ias_maxcnf7ld,ias_maxcnf8ld,ias_maxconf1to,ias_maxconf2to,ias_maxconf3to,ias_maxconf4to,ias_maxconf5to,ias_max_geardw,ias_min_finapp,ias_to,ias_to_50,ils_lim,ils_val,in_flight,ivv,ivv_csn,ivv_max_bl2000,ivv_min_cl35,ivv_min_cl400,ivv_sel,latpc,latpc_csn,lat_air,ldgl,ldgl_csn,ldgnos,ldgnos_csn,ldgr,ldgr_csn,ldg_seldw_csn,ldg_unlokdw,lift_gnd,loc_devc,loc_devc_csn,loc_gap,long_air,lonpc,lonpc_csn,low_press_1,low_press_2,lo_armed,mach,mach_buff,mach_buff_csn,mach_csn,mach_max,mas_cau,mas_cau_csn,mas_war,max_armed,med_armed,min_alt_n1_40,min_n1_40,mmo,n11c,n11_csn,n12c,n12_csn,n1_cmd1,n1_cmd2,n1_epr1,n1_epr2,n1_max_txo3min,n1_min_bl500,n1_ths_tgt,n21,n21c,n21_csn,n22,n22c,n22_csn,oil_qty1_csn,oil_qty2_csn,one_eng_app,origin,par_qual,pass_no,pf,pilot_ld,pilot_to,pitch_altr,ralt1c,ralt2c,raltc,raltc_csn,rate,refused_trans,relief,rev_deployd1,rev_deployd2,rev_unlock_1,rev_unlock_2,roll_cpt,roll_fo,runway_ld,runway_ld_csn,runway_to,runway_to_csn,sat,satr_csn,sf_count,single_txo,slat,slatc,slatc_csn,slatrw,slat_spd,smk_avi_war,smk_crg_war,smk_lvy_war,spd_mach_a_m,spoil_l2,spoil_l2c,spoil_l4,spoil_l4c,spoil_l5,spoil_l5c,spoil_r2,spoil_r2c,spoil_r3,spoil_r3c,spoil_r5,spoil_r5c,spoil_val1,spoil_val2,spoil_val3,spoil_val4,spoil_val5,sstck_cpt_ino,sstck_fo_ino,stab,stab_ld,stall_war,start_analysis,start_flight,surf_war,tail_wind,tas,tas_csn,tat_csn,tat_to,tcas_cmb_ctl,tcas_crw_sel,tcas_dwn_adv,tcas_rac,tcas_ra_1,tcas_ra_10,tcas_ra_11,tcas_ra_12,tcas_ra_2,tcas_ra_3,tcas_ra_4,tcas_ra_5,tcas_ra_6,tcas_ra_7,tcas_ra_8,tcas_ra_9,tcas_ta,tcas_ta_1,tcas_ta_2,tcas_up_adv,tcas_vrt_ctl,thrust_epr,thr_deficit,time_1000,time_csn,time_eng_start,time_eng_stop,time_ld,time_r,time_r_csn,time_to,tla1,tla1c,tla1_csn,tla2,tla2c,tla2_csn,touch_gnd,track_select,trigger_code,ttdwn,v1,v1_csn,v2,v2_csn,v2_min,v2_to,vapp,vapp_ld,vev,vfe,vgdot,vhf,vhf_cfa,vhf_keying_c_csn,vhf_keying_l_csn,vhf_keying_r_csn,vib_n11_csn,vib_n12_csn,vib_n1fnt1,vib_n1fnt2,vib_n21_csn,vib_n22_csn,vib_n2fnt1,vib_n2fnt2,vls,vls_csn,vmax,vmo,vmo_mmo_ovs,vr,vref,vref_csn,vr_csn,vs1g,wea_alt,wea_dewpoint,wea_temp,wea_valid,wea_visib,wea_windir,wea_winspd,win_dir,win_dir_csn,win_spd,win_spd_csn,x_air,y_airfrom  czods.s_qara_320020_1hz where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo' and time_series=0"
+      val sqlDemo =
+        s"""
+           |insert into qara_mid.mid_qara_320020_1hz_fillup
+           |select file_no,flt_dt,tail_num,`time`,1,aapp,aapp_td,ac_tail1,ac_tail2,
+           |ac_tail3,ac_type,ac_type_csn,aie1,aie2,aill,ailr,air_durn,aiw,alpha_floor,
+           |alt_const,alt_qnh,alt_qnh_csn,alt_qnh_ld,alt_qnh_to,alt_sel,alt_sel_csn,
+           |alt_std,alt_stdc,alt_stdc_csn,aoal,aoar,apu_on,apu_on_csn,ap_egd1,
+           |ap_egd1_csn,ap_egd2,ap_egd2_csn,ap_off,ap_off_csn,arp_dist_dest,arp_dist_dest_csn,
+           |arp_dist_orig,arp_heigh_dest,arp_heigh_orig,ats_active,ats_egd,ats_egdoract_csn,
+           |ats_egd_csn,ats_ret_mod,ats_spd_mach,ats_thrustn1,auto_brk_flt,auto_brk_off,
+           |auto_land_wn,auto_v2,b3d_day,b3d_hour,b3d_min,b3d_month,badsf_nr,baromb,
+           |bea_mk,brk_pdll,brk_ped_rh,cab_prs_war,city_from_r_csn,city_to,city_to_r_csn,
+           |ck_alt_sel,ck_alt_std,ck_c1_r1_col,ck_c1_r1_txt,ck_c1_r3_col,ck_c1_r3_txt,ck_c2_r1_col,
+           |ck_c2_r1_txt,ck_c2_r2_col,ck_c2_r2_txt,ck_c2_r3_col,ck_c2_r3_txt,ck_c3_r1_col,
+           |ck_c3_r1_txt,ck_c3_r2_col,ck_c3_r2_txt,ck_c4_r1_col,ck_c4_r1_txt,ck_c4_r2_col,ck_c4_r2_txt,
+           |ck_c4_r3_col,ck_c4_r3_txt,ck_c5_r1_col,ck_c5_r1_txt,ck_c5_r2_col,ck_c5_r2_txt,ck_c5_r3_col,
+           |ck_c5_r3_txt,ck_conf_pos,ck_conf_pos_pc,ck_egt1,ck_egt2,ck_epr1,ck_epr2,ck_flap_spd,ck_fqty,
+           |ck_gpws_mode,ck_gw,ck_head,ck_head_mag,ck_head_sel,ck_head_selon,ck_ias,ck_ldg_seldw,ck_ldg_wow,
+           |ck_mach,ck_mas_war,ck_n11,ck_n12,ck_n21,ck_n22,ck_ralt,ck_rev_dep1,ck_rev_dep2,ck_spd_brk,
+           |ck_tcas_ra,ck_tcas_ta,ck_tla_pct1,ck_tla_pct2,ck_v1,ck_v2,ck_vapp,ck_vhf1_emit,ck_vls,ck_vmax,
+           |ck_vr,conf,conf_csn,conf_ld,conf_to,cut,`date`,date_r,date_r_csn,date_to,dat_year,day_ld,day_to,
+           |debug,destination,dev_mag,dfc_csn,dfc_pos_cfa,dist,dist0,dist_lat_td,dist_ldg,dist_ldg_csn,dist_ldg_from_gs,
+           |dist_pthr,dist_to,drift_csn,dual_input,durn_200_ld,durn_txo,egt1,egt1c,egt1c_csn,egt1_csn,egt2,
+           |egt2c,egt2c_csn,egt2_csn,egt_max,elevl,elevr,eng1_severit,eng2_severit,eng_man,epr1,epr1c,epr1_csn,
+           |epr2,epr2c,epr2_csn,epr_cmd_1,epr_cmd_2,epr_tgt1,evt_mk,fburn,fburn1,fburn1_txo,fburn2,fburn2_txo,
+           |fburn3_txo,fburn4_txo,fburn_avg,fburn_ti,fburn_txo,fburn_txo_avg,fd_1,fd_2,ff1,ff1c,ff1_csn,ff2,
+           |ff2c,ff2_csn,fire1,fire2,fire_apu,flap,flapc,flapc_csn,flap_spd,flight_chang,flight_ident,flight_input,
+           |flight_no1,flight_no1_csn,flight_no2,flight_no2_csn,flight_phase,flight_phase_csn,flight_recogn,
+           |flight_type,flt_path_angl,flt_path_angl_csn,fma_lat,fma_long,fpa_selected,fqty_ld,fqty_to,fr_count,
+           |fuel_fire_1,fuel_fire_2,gamax1000,gamax150,gamax500,gamin1000,gamin150,gamin500,glide_devc,glide_devc_csn,
+           |glide_dev_max,glide_dev_min,glide_gap,glide_ils,gpws_ctype,gpws_dont_sink,gpws_flap_low,gpws_gear_low,
+           |gpws_glide,gpws_mode,gpws_mode_csn,gpws_pull_up,gpws_sink_rate,gpws_tr_low,gpws_tr_up,gpws_war,gpws_wsh_war,
+           |gs,gsc,gsc1p,gsc_csn,gs_csn,gwc,gw_csn,gw_landing_lim,gw_ld,gw_takeoff_lim,gw_taxi_lim,gw_to,head,head_csn,
+           |head_lin,head_lin_csn,head_mag,head_sel,head_true,head_true_csn,height,height_csn,heig_1conf_chg,
+           |heig_dev_1000,heig_dev_500,heig_gear_dw,heig_lconf_chg,hf,hf_cfa,hp_fuel_vv_1,hp_fuel_vv_2,ias,iasc,
+           |iasc_csn,ias_app_1000,ias_app_50,ias_app_500,ias_bef_ld,ias_cl_1000,ias_cl_500,ias_csn,ias_ext_conf1,
+           |ias_ext_conf2,ias_ext_conf3,ias_ext_conf4,ias_ext_conf5,ias_ld,ias_max,ias_maxcnf1ld,ias_maxcnf2ld,
+           |ias_maxcnf3ld,ias_maxcnf4ld,ias_maxcnf5ld,ias_maxcnf6ld,ias_maxcnf7ld,ias_maxcnf8ld,ias_maxconf1to,
+           |ias_maxconf2to,ias_maxconf3to,ias_maxconf4to,ias_maxconf5to,ias_max_geardw,ias_min_finapp,ias_to,ias_to_50,
+           |ils_lim,ils_val,in_flight,ivv,ivv_csn,ivv_max_bl2000,ivv_min_cl35,ivv_min_cl400,ivv_sel,latpc,latpc_csn,
+           |lat_air,ldgl,ldgl_csn,ldgnos,ldgnos_csn,ldgr,ldgr_csn,ldg_seldw_csn,ldg_unlokdw,lift_gnd,loc_devc,loc_devc_csn,
+           |loc_gap,long_air,lonpc,lonpc_csn,low_press_1,low_press_2,lo_armed,mach,mach_buff,mach_buff_csn,mach_csn,mach_max,
+           |mas_cau,mas_cau_csn,mas_war,max_armed,med_armed,min_alt_n1_40,min_n1_40,mmo,n11c,n11_csn,n12c,n12_csn,n1_cmd1,
+           |n1_cmd2,n1_epr1,n1_epr2,n1_max_txo3min,n1_min_bl500,n1_ths_tgt,n21,n21c,n21_csn,n22,n22c,n22_csn,oil_qty1_csn,
+           |oil_qty2_csn,one_eng_app,origin,par_qual,pass_no,pf,pilot_ld,pilot_to,pitch_altr,ralt1c,ralt2c,raltc,raltc_csn,
+           |rate,refused_trans,relief,rev_deployd1,rev_deployd2,rev_unlock_1,rev_unlock_2,roll_cpt,roll_fo,runway_ld,
+           |runway_ld_csn,runway_to,runway_to_csn,sat,satr_csn,sf_count,single_txo,slat,slatc,slatc_csn,slatrw,slat_spd,
+           |smk_avi_war,smk_crg_war,smk_lvy_war,spd_mach_a_m,spoil_l2,spoil_l2c,spoil_l4,spoil_l4c,spoil_l5,spoil_l5c,
+           |spoil_r2,spoil_r2c,spoil_r3,spoil_r3c,spoil_r5,spoil_r5c,spoil_val1,spoil_val2,spoil_val3,spoil_val4,spoil_val5,
+           |sstck_cpt_ino,sstck_fo_ino,stab,stab_ld,stall_war,start_analysis,start_flight,surf_war,tail_wind,tas,tas_csn,
+           |tat_csn,tat_to,tcas_cmb_ctl,tcas_crw_sel,tcas_dwn_adv,tcas_rac,tcas_ra_1,tcas_ra_10,tcas_ra_11,tcas_ra_12,
+           |tcas_ra_2,tcas_ra_3,tcas_ra_4,tcas_ra_5,tcas_ra_6,tcas_ra_7,tcas_ra_8,tcas_ra_9,tcas_ta,tcas_ta_1,tcas_ta_2,
+           |tcas_up_adv,tcas_vrt_ctl,thrust_epr,thr_deficit,time_1000,time_csn,time_eng_start,time_eng_stop,time_ld,time_r,
+           |time_r_csn,time_to,tla1,tla1c,tla1_csn,tla2,tla2c,tla2_csn,touch_gnd,track_select,trigger_code,ttdwn,v1,v1_csn,
+           |v2,v2_csn,v2_min,v2_to,vapp,vapp_ld,vev,vfe,vgdot,vhf,vhf_cfa,vhf_keying_c_csn,vhf_keying_l_csn,vhf_keying_r_csn,
+           |vib_n11_csn,vib_n12_csn,vib_n1fnt1,vib_n1fnt2,vib_n21_csn,vib_n22_csn,vib_n2fnt1,vib_n2fnt2,vls,vls_csn,vmax,vmo,
+           |vmo_mmo_ovs,vr,vref,vref_csn,vr_csn,vs1g,wea_alt,wea_dewpoint,wea_temp,wea_valid,wea_visib,wea_windir,wea_winspd,
+           |win_dir,win_dir_csn,win_spd,win_spd_csn,x_air,y_airfrom  czods.s_qara_320020_1hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo' and time_series=0
+           |""".stripMargin
       spark.sql(sqlDemo)
     })
   }
 
   private def deal2hzTableData(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_2hz_fillup_temp;")
-    spark.sql("create table if not exists qara_mid.mid_qara_320020_2hz_fillup_temp (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT, `ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT, `roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT, `roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT, `spoil_rout1` INT,`yaw_faul1` INT, `yaw_faul2` INT) USING lakesoul PARTITIONED BY (flt_dt, tail_num, file_no) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup_temp'")
+    spark.sql(
+      """create table if not exists qara_mid.mid_qara_320020_2hz_fillup_temp (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT,
+        |`ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT,
+        |`roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT,
+        |`roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT,
+        |`spoil_rout1` INT,`yaw_faul1` INT, `yaw_faul2` INT
+        |) USING lakesoul PARTITIONED BY (flt_dt, tail_num, file_no)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup_temp'
+        |""".stripMargin)
     spark.sql("drop table if exists qara_mid.mid_qara_320020_2hz_fillup;")
-    spark.sql("create table if not exists qara_mid.mid_qara_320020_2hz_fillup (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT, `ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT, `roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT, `roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT, `spoil_rout1` INT,`yaw_faul1` INT, `yaw_faul2` INT) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup'")
+    spark.sql(
+      """create table if not exists qara_mid.mid_qara_320020_2hz_fillup (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT,
+        |`ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT,
+        |`roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT,
+        |`roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT, `spoil_rout1` INT,
+        |`yaw_faul1` INT, `yaw_faul2` INT
+        |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup'
+        |""".stripMargin)
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
-      val sqlDemo = s"insert into qara_mid.mid_qara_320020_2hz_fillup_temp  select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt) as ck_pitch_cpt,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo) as ck_pitch_fo,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt) as ck_roll_cpt,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo) as ck_roll_fo,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd) as ck_rudd,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt) as pitch_cpt,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo) as pitch_fo,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll) as roll,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs) as roll_abs,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn) as roll_csn,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500) as roll_max_ab500,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100) as roll_max_bl100,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20) as roll_max_bl20,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500) as roll_max_bl500,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd) as rudd,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm) as spoil_gnd_arm,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1) as spoil_lout1,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1) as spoil_rout1,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1) as yaw_faul1,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2) as yaw_faul2 from (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*  from  czods.s_qara_320020_2hz    where    flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t0 left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,* from  czods.s_qara_320020_2hz    where    flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'    ) t1 on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add  left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*  from  czods.s_qara_320020_2hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'      ) t2  on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add  left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,* from  czods.s_qara_320020_2hz where   flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t3 left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+4 as row_id_add,*  from  czods.s_qara_320020_2hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'       ) t4  on t0.flt_dt=t4.flt_dt and t0.file_no=t4.file_no and t0.tail_num=t4.tail_num and t0.row_id_add=t4.row_id_add left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+5 as row_id_add,* from  czods.s_qara_320020_2hz    where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'      ) t5 on t0.flt_dt=t5.flt_dt and t0.file_no=t5.file_no and t0.tail_num=t5.tail_num and t0.row_id_add=t5.row_id_add left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+6 as row_id_add,*  from  czods.s_qara_320020_2hz where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t6 on t0.flt_dt=t6.flt_dt and t0.file_no=t6.file_no and t0.tail_num=t6.tail_num and t0.row_id_add=t6.row_id_add left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+7 as row_id_add,*  from  czods.s_qara_320020_2hz where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'       ) t7 on t0.flt_dt=t7.flt_dt and t0.file_no=t7.file_no and t0.tail_num=t7.tail_num and t0.row_id_add=t7.row_id_add";
+      val sqlDemo =
+        s"""
+           |insert into qara_mid.mid_qara_320020_2hz_fillup_temp
+           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
+           |,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt) as ck_pitch_cpt
+           |,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo) as ck_pitch_fo
+           |,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt) as ck_roll_cpt
+           |,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo) as ck_roll_fo
+           |,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd) as ck_rudd
+           |,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt) as pitch_cpt
+           |,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo) as pitch_fo
+           |,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll) as roll
+           |,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs) as roll_abs
+           |,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn) as roll_csn
+           |,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500) as roll_max_ab500
+           |,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100) as roll_max_bl100
+           |,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20) as roll_max_bl20
+           |,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500) as roll_max_bl500
+           |,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd) as rudd
+           |,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm) as spoil_gnd_arm
+           |,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1) as spoil_lout1
+           |,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1) as spoil_rout1
+           |,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1) as yaw_faul1
+           |,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2) as yaw_faul2
+           |from (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*  from  czods.s_qara_320020_2hz
+           |where    flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t0
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,* from  czods.s_qara_320020_2hz
+           |where    flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'    ) t1 on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*  from  czods.s_qara_320020_2hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'      ) t2  on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add
+           |left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,* from  czods.s_qara_320020_2hz
+           |where   flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t3
+           |left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+4 as row_id_add,*  from  czods.s_qara_320020_2hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'       ) t4  on t0.flt_dt=t4.flt_dt and t0.file_no=t4.file_no and t0.tail_num=t4.tail_num and t0.row_id_add=t4.row_id_add
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+5 as row_id_add,* from  czods.s_qara_320020_2hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'      ) t5 on t0.flt_dt=t5.flt_dt and t0.file_no=t5.file_no and t0.tail_num=t5.tail_num and t0.row_id_add=t5.row_id_add
+           |left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+6 as row_id_add,*  from  czods.s_qara_320020_2hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t6 on t0.flt_dt=t6.flt_dt and t0.file_no=t6.file_no
+           |and t0.tail_num=t6.tail_num and t0.row_id_add=t6.row_id_add left join (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+7 as row_id_add,*  from  czods.s_qara_320020_2hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'       ) t7 on t0.flt_dt=t7.flt_dt and t0.file_no=t7.file_no and t0.tail_num=t7.tail_num and t0.row_id_add=t7.row_id_add
+           |""".stripMargin
       spark.sql(sqlDemo)
     })
 
@@ -401,26 +580,118 @@ object QarNullSupplementDemo {
 
   private def deal4hzTableData(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_4hz_fillup;")
-    spark.sql("create table if not exists qara_mid.mid_qara_320020_4hz_fillup (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,`latg` FLOAT, `latg_csn` FLOAT, `lift_off_pitch1` FLOAT, `lift_off_pitch2` FLOAT, `lift_off_pitch3` FLOAT, `lift_off_pitch4` FLOAT,`lift_off_raltc1` FLOAT, `lift_off_raltc2` FLOAT, `lift_off_raltc3` FLOAT, `lift_off_raltc4` FLOAT,`lift_off_t1` INT, `lift_off_t2` INT, `lift_off_t3` INT, `lift_off_t4` INT,`long` FLOAT, `longc` FLOAT, `long_csn` FLOAT,`pitch` FLOAT, `pitch_csn` FLOAT, `pitch_max_ld` FLOAT, `pitch_max_to` FLOAT,`pitch_ratavgto` FLOAT, `pitch_rate` FLOAT, `pitch_rate_csn` FLOAT, `pitch_ratmaxto` FLOAT) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_4hz_fillup'")
+    spark.sql(
+      """create table if not exists qara_mid.mid_qara_320020_4hz_fillup (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT,
+        |`time_series` INT,`latg` FLOAT, `latg_csn` FLOAT, `lift_off_pitch1` FLOAT,
+        |`lift_off_pitch2` FLOAT, `lift_off_pitch3` FLOAT, `lift_off_pitch4` FLOAT,
+        |`lift_off_raltc1` FLOAT, `lift_off_raltc2` FLOAT, `lift_off_raltc3` FLOAT,
+        |`lift_off_raltc4` FLOAT,`lift_off_t1` INT, `lift_off_t2` INT, `lift_off_t3` INT,
+        |`lift_off_t4` INT,`long` FLOAT, `longc` FLOAT, `long_csn` FLOAT,`pitch` FLOAT,
+        |`pitch_csn` FLOAT, `pitch_max_ld` FLOAT, `pitch_max_to` FLOAT,`pitch_ratavgto` FLOAT,
+        |`pitch_rate` FLOAT, `pitch_rate_csn` FLOAT, `pitch_ratmaxto` FLOAT
+        |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_4hz_fillup'
+        |""".stripMargin)
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
-      val sqlDemo = s"insert into  qara_mid.mid_qara_320020_4hz_fillup  select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series,COALESCE(t0.latg,t1.latg,t2.latg,t3.latg,t4.latg,t5.latg,t6.latg,t7.latg) as latg,COALESCE(t0.latg_csn,t1.latg_csn,t2.latg_csn,t3.latg_csn,t4.latg_csn,t5.latg_csn,t6.latg_csn,t7.latg_csn) as latg_csn,COALESCE(t0.lift_off_pitch1,t1.lift_off_pitch1,t2.lift_off_pitch1,t3.lift_off_pitch1,t4.lift_off_pitch1,t5.lift_off_pitch1,t6.lift_off_pitch1,t7.lift_off_pitch1) as lift_off_pitch1,COALESCE(t0.lift_off_pitch2,t1.lift_off_pitch2,t2.lift_off_pitch2,t3.lift_off_pitch2,t4.lift_off_pitch2,t5.lift_off_pitch2,t6.lift_off_pitch2,t7.lift_off_pitch2) as lift_off_pitch2,COALESCE(t0.lift_off_pitch3,t1.lift_off_pitch3,t2.lift_off_pitch3,t3.lift_off_pitch3,t4.lift_off_pitch3,t5.lift_off_pitch3,t6.lift_off_pitch3,t7.lift_off_pitch3) as lift_off_pitch3,COALESCE(t0.lift_off_pitch4,t1.lift_off_pitch4,t2.lift_off_pitch4,t3.lift_off_pitch4,t4.lift_off_pitch4,t5.lift_off_pitch4,t6.lift_off_pitch4,t7.lift_off_pitch4) as lift_off_pitch4,COALESCE(t0.lift_off_raltc1,t1.lift_off_raltc1,t2.lift_off_raltc1,t3.lift_off_raltc1,t4.lift_off_raltc1,t5.lift_off_raltc1,t6.lift_off_raltc1,t7.lift_off_raltc1) as lift_off_raltc1,COALESCE(t0.lift_off_raltc2,t1.lift_off_raltc2,t2.lift_off_raltc2,t3.lift_off_raltc2,t4.lift_off_raltc2,t5.lift_off_raltc2,t6.lift_off_raltc2,t7.lift_off_raltc2) as lift_off_raltc2,COALESCE(t0.lift_off_raltc3,t1.lift_off_raltc3,t2.lift_off_raltc3,t3.lift_off_raltc3,t4.lift_off_raltc3,t5.lift_off_raltc3,t6.lift_off_raltc3,t7.lift_off_raltc3) as lift_off_raltc3,COALESCE(t0.lift_off_raltc4,t1.lift_off_raltc4,t2.lift_off_raltc4,t3.lift_off_raltc4,t4.lift_off_raltc4,t5.lift_off_raltc4,t6.lift_off_raltc4,t7.lift_off_raltc4) as lift_off_raltc4,COALESCE(t0.lift_off_t1,t1.lift_off_t1,t2.lift_off_t1,t3.lift_off_t1,t4.lift_off_t1,t5.lift_off_t1,t6.lift_off_t1,t7.lift_off_t1) as lift_off_t1,COALESCE(t0.lift_off_t2,t1.lift_off_t2,t2.lift_off_t2,t3.lift_off_t2,t4.lift_off_t2,t5.lift_off_t2,t6.lift_off_t2,t7.lift_off_t2) as lift_off_t2,COALESCE(t0.lift_off_t3,t1.lift_off_t3,t2.lift_off_t3,t3.lift_off_t3,t4.lift_off_t3,t5.lift_off_t3,t6.lift_off_t3,t7.lift_off_t3) as lift_off_t3,COALESCE(t0.lift_off_t4,t1.lift_off_t4,t2.lift_off_t4,t3.lift_off_t4,t4.lift_off_t4,t5.lift_off_t4,t6.lift_off_t4,t7.lift_off_t4) as lift_off_t4,COALESCE(t0.long,t1.long,t2.long,t3.long,t4.long,t5.long,t6.long,t7.long) as long,COALESCE(t0.longc,t1.longc,t2.longc,t3.longc,t4.longc,t5.longc,t6.longc,t7.longc) as longc,COALESCE(t0.long_csn,t1.long_csn,t2.long_csn,t3.long_csn,t4.long_csn,t5.long_csn,t6.long_csn,t7.long_csn) as long_csn,COALESCE(t0.pitch,t1.pitch,t2.pitch,t3.pitch,t4.pitch,t5.pitch,t6.pitch,t7.pitch) as pitch,COALESCE(t0.pitch_csn,t1.pitch_csn,t2.pitch_csn,t3.pitch_csn,t4.pitch_csn,t5.pitch_csn,t6.pitch_csn,t7.pitch_csn) as pitch_csn,COALESCE(t0.pitch_max_ld,t1.pitch_max_ld,t2.pitch_max_ld,t3.pitch_max_ld,t4.pitch_max_ld,t5.pitch_max_ld,t6.pitch_max_ld,t7.pitch_max_ld) as pitch_max_ld,COALESCE(t0.pitch_max_to,t1.pitch_max_to,t2.pitch_max_to,t3.pitch_max_to,t4.pitch_max_to,t5.pitch_max_to,t6.pitch_max_to,t7.pitch_max_to) as pitch_max_to,COALESCE(t0.pitch_ratavgto,t1.pitch_ratavgto,t2.pitch_ratavgto,t3.pitch_ratavgto,t4.pitch_ratavgto,t5.pitch_ratavgto,t6.pitch_ratavgto,t7.pitch_ratavgto) as pitch_ratavgto,COALESCE(t0.pitch_rate,t1.pitch_rate,t2.pitch_rate,t3.pitch_rate,t4.pitch_rate,t5.pitch_rate,t6.pitch_rate,t7.pitch_rate) as pitch_rate,COALESCE(t0.pitch_rate_csn,t1.pitch_rate_csn,t2.pitch_rate_csn,t3.pitch_rate_csn,t4.pitch_rate_csn,t5.pitch_rate_csn,t6.pitch_rate_csn,t7.pitch_rate_csn) as pitch_rate_csn,COALESCE(t0.pitch_ratmaxto,t1.pitch_ratmaxto,t2.pitch_ratmaxto,t3.pitch_ratmaxto,t4.pitch_ratmaxto,t5.pitch_ratmaxto,t6.pitch_ratmaxto,t7.pitch_ratmaxto) as pitch_ratmaxto from   (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*  from  czods.s_qara_320020_4hz    where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'          ) t0 left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,* from  czods.s_qara_320020_4hz    where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'         ) t1 on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add  left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*  from  czods.s_qara_320020_4hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'        ) t2  on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*  from  czods.s_qara_320020_4hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo') t3 on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add   left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+4 as row_id_add,*  from  czods.s_qara_320020_4hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'         ) t4  on t0.flt_dt=t4.flt_dt and t0.file_no=t4.file_no and t0.tail_num=t4.tail_num and t0.row_id_add=t4.row_id_add left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+5 as row_id_add,* from  czods.s_qara_320020_4hz    where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'        ) t5 on t0.flt_dt=t5.flt_dt and t0.file_no=t5.file_no and t0.tail_num=t5.tail_num and t0.row_id_add=t5.row_id_add  left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+6 as row_id_add,*   from  czods.s_qara_320020_4hz  where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'         ) t6  on t0.flt_dt=t6.flt_dt and t0.file_no=t6.file_no and t0.tail_num=t6.tail_num and t0.row_id_add=t6.row_id_add left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+7 as row_id_add,*  from  czods.s_qara_320020_4hz   where flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'         ) t7 on t0.flt_dt=t7.flt_dt and t0.file_no=t7.file_no and t0.tail_num=t7.tail_num and t0.row_id_add=t7.row_id_add; ";
+      val sqlDemo =
+        s"""
+           |insert into  qara_mid.mid_qara_320020_4hz_fillup
+           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
+           |,COALESCE(t0.latg,t1.latg,t2.latg,t3.latg,t4.latg,t5.latg,t6.latg,t7.latg) as latg
+           |,COALESCE(t0.latg_csn,t1.latg_csn,t2.latg_csn,t3.latg_csn,t4.latg_csn,t5.latg_csn,t6.latg_csn,t7.latg_csn) as latg_csn
+           |,COALESCE(t0.lift_off_pitch1,t1.lift_off_pitch1,t2.lift_off_pitch1,t3.lift_off_pitch1,t4.lift_off_pitch1,t5.lift_off_pitch1,t6.lift_off_pitch1,t7.lift_off_pitch1) as lift_off_pitch1
+           |,COALESCE(t0.lift_off_pitch2,t1.lift_off_pitch2,t2.lift_off_pitch2,t3.lift_off_pitch2,t4.lift_off_pitch2,t5.lift_off_pitch2,t6.lift_off_pitch2,t7.lift_off_pitch2) as lift_off_pitch2
+           |,COALESCE(t0.lift_off_pitch3,t1.lift_off_pitch3,t2.lift_off_pitch3,t3.lift_off_pitch3,t4.lift_off_pitch3,t5.lift_off_pitch3,t6.lift_off_pitch3,t7.lift_off_pitch3) as lift_off_pitch3
+           |,COALESCE(t0.lift_off_pitch4,t1.lift_off_pitch4,t2.lift_off_pitch4,t3.lift_off_pitch4,t4.lift_off_pitch4,t5.lift_off_pitch4,t6.lift_off_pitch4,t7.lift_off_pitch4) as lift_off_pitch4
+           |,COALESCE(t0.lift_off_raltc1,t1.lift_off_raltc1,t2.lift_off_raltc1,t3.lift_off_raltc1,t4.lift_off_raltc1,t5.lift_off_raltc1,t6.lift_off_raltc1,t7.lift_off_raltc1) as lift_off_raltc1
+           |,COALESCE(t0.lift_off_raltc2,t1.lift_off_raltc2,t2.lift_off_raltc2,t3.lift_off_raltc2,t4.lift_off_raltc2,t5.lift_off_raltc2,t6.lift_off_raltc2,t7.lift_off_raltc2) as lift_off_raltc2
+           |,COALESCE(t0.lift_off_raltc3,t1.lift_off_raltc3,t2.lift_off_raltc3,t3.lift_off_raltc3,t4.lift_off_raltc3,t5.lift_off_raltc3,t6.lift_off_raltc3,t7.lift_off_raltc3) as lift_off_raltc3
+           |,COALESCE(t0.lift_off_raltc4,t1.lift_off_raltc4,t2.lift_off_raltc4,t3.lift_off_raltc4,t4.lift_off_raltc4,t5.lift_off_raltc4,t6.lift_off_raltc4,t7.lift_off_raltc4) as lift_off_raltc4
+           |,COALESCE(t0.lift_off_t1,t1.lift_off_t1,t2.lift_off_t1,t3.lift_off_t1,t4.lift_off_t1,t5.lift_off_t1,t6.lift_off_t1,t7.lift_off_t1) as lift_off_t1
+           |,COALESCE(t0.lift_off_t2,t1.lift_off_t2,t2.lift_off_t2,t3.lift_off_t2,t4.lift_off_t2,t5.lift_off_t2,t6.lift_off_t2,t7.lift_off_t2) as lift_off_t2
+           |,COALESCE(t0.lift_off_t3,t1.lift_off_t3,t2.lift_off_t3,t3.lift_off_t3,t4.lift_off_t3,t5.lift_off_t3,t6.lift_off_t3,t7.lift_off_t3) as lift_off_t3
+           |,COALESCE(t0.lift_off_t4,t1.lift_off_t4,t2.lift_off_t4,t3.lift_off_t4,t4.lift_off_t4,t5.lift_off_t4,t6.lift_off_t4,t7.lift_off_t4) as lift_off_t4
+           |,COALESCE(t0.long,t1.long,t2.long,t3.long,t4.long,t5.long,t6.long,t7.long) as long
+           |,COALESCE(t0.longc,t1.longc,t2.longc,t3.longc,t4.longc,t5.longc,t6.longc,t7.longc) as longc
+           |,COALESCE(t0.long_csn,t1.long_csn,t2.long_csn,t3.long_csn,t4.long_csn,t5.long_csn,t6.long_csn,t7.long_csn) as long_csn
+           |,COALESCE(t0.pitch,t1.pitch,t2.pitch,t3.pitch,t4.pitch,t5.pitch,t6.pitch,t7.pitch) as pitch
+           |,COALESCE(t0.pitch_csn,t1.pitch_csn,t2.pitch_csn,t3.pitch_csn,t4.pitch_csn,t5.pitch_csn,t6.pitch_csn,t7.pitch_csn) as pitch_csn
+           |,COALESCE(t0.pitch_max_ld,t1.pitch_max_ld,t2.pitch_max_ld,t3.pitch_max_ld,t4.pitch_max_ld,t5.pitch_max_ld,t6.pitch_max_ld,t7.pitch_max_ld) as pitch_max_ld
+           |,COALESCE(t0.pitch_max_to,t1.pitch_max_to,t2.pitch_max_to,t3.pitch_max_to,t4.pitch_max_to,t5.pitch_max_to,t6.pitch_max_to,t7.pitch_max_to) as pitch_max_to
+           |,COALESCE(t0.pitch_ratavgto,t1.pitch_ratavgto,t2.pitch_ratavgto,t3.pitch_ratavgto,t4.pitch_ratavgto,t5.pitch_ratavgto,t6.pitch_ratavgto,t7.pitch_ratavgto) as pitch_ratavgto
+           |,COALESCE(t0.pitch_rate,t1.pitch_rate,t2.pitch_rate,t3.pitch_rate,t4.pitch_rate,t5.pitch_rate,t6.pitch_rate,t7.pitch_rate) as pitch_rate
+           |,COALESCE(t0.pitch_rate_csn,t1.pitch_rate_csn,t2.pitch_rate_csn,t3.pitch_rate_csn,t4.pitch_rate_csn,t5.pitch_rate_csn,t6.pitch_rate_csn,t7.pitch_rate_csn) as pitch_rate_csn
+           |,COALESCE(t0.pitch_ratmaxto,t1.pitch_ratmaxto,t2.pitch_ratmaxto,t3.pitch_ratmaxto,t4.pitch_ratmaxto,t5.pitch_ratmaxto,t6.pitch_ratmaxto,t7.pitch_ratmaxto) as pitch_ratmaxto
+           |from   (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*  from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'          ) t0
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,* from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'         ) t1 on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*  from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'        ) t2  on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*  from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo') t3 on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+4 as row_id_add,*  from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'         ) t4  on t0.flt_dt=t4.flt_dt and t0.file_no=t4.file_no and t0.tail_num=t4.tail_num and t0.row_id_add=t4.row_id_add
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+5 as row_id_add,* from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'        ) t5 on t0.flt_dt=t5.flt_dt and t0.file_no=t5.file_no and t0.tail_num=t5.tail_num and t0.row_id_add=t5.row_id_add
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+6 as row_id_add,*   from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'         ) t6  on t0.flt_dt=t6.flt_dt and t0.file_no=t6.file_no and t0.tail_num=t6.tail_num and t0.row_id_add=t6.row_id_add
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+7 as row_id_add,*  from  czods.s_qara_320020_4hz
+           |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'         ) t7 on t0.flt_dt=t7.flt_dt and t0.file_no=t7.file_no and t0.tail_num=t7.tail_num and t0.row_id_add=t7.row_id_add;
+           |""".stripMargin
       spark.sql(sqlDemo)
     })
   }
 
   private def deal8hzTableData(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_8hz_fillup;")
-    spark.sql("create table if not exists qara_mid.mid_qara_320020_8hz_fillup (`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,`bad_sf` INT, `lift_off` INT, `pad` INT, `t` INT, `time_stamp` INT, `time_tag` INT, `touch_down` INT, `turbulence` INT,`value_st` INT, `vrtg` FLOAT, `vrtg_avg` FLOAT, `vrtg_csn` FLOAT, `vrtg_max_air` FLOAT, `vrtg_max_gnd` FLOAT, `vrtg_max_ld` FLOAT) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`) LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_8hz_fillup'")
+    spark.sql(
+      """create table if not exists qara_mid.mid_qara_320020_8hz_fillup (
+        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT,
+        |`time_series` INT,`bad_sf` INT, `lift_off` INT, `pad` INT, `t` INT,
+        |`time_stamp` INT, `time_tag` INT, `touch_down` INT, `turbulence` INT,
+        |`value_st` INT, `vrtg` FLOAT, `vrtg_avg` FLOAT, `vrtg_csn` FLOAT,
+        |`vrtg_max_air` FLOAT, `vrtg_max_gnd` FLOAT, `vrtg_max_ld` FLOAT)
+        |USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_8hz_fillup'
+        |""".stripMargin)
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
-      val sqlDemo = s"insert into qara_mid.mid_qara_320020_8hz_fillup  select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series ,COALESCE(t0.bad_sf,t1.bad_sf,t2.bad_sf,t3.bad_sf) as bad_sf ,COALESCE(t0.lift_off,t1.lift_off,t2.lift_off,t3.lift_off) as lift_off ,COALESCE(t0.pad,t1.pad,t2.pad,t3.pad) as pad ,COALESCE(t0.t,t1.t,t2.t,t3.t) as t ,COALESCE(t0.time_stamp,t1.time_stamp,t2.time_stamp,t3.time_stamp) as time_stamp ,COALESCE(t0.time_tag,t1.time_tag,t2.time_tag,t3.time_tag) as time_tag ,COALESCE(t0.touch_down,t1.touch_down,t2.touch_down,t3.touch_down) as touch_down ,COALESCE(t0.turbulence,t1.turbulence,t2.turbulence,t3.turbulence) as turbulence ,COALESCE(t0.value_st,t1.value_st,t2.value_st,t3.value_st) as value_st ,COALESCE(t0.vrtg,t1.vrtg,t2.vrtg,t3.vrtg) as vrtg ,COALESCE(t0.vrtg_avg,t1.vrtg_avg,t2.vrtg_avg,t3.vrtg_avg) as vrtg_avg ,COALESCE(t0.vrtg_csn,t1.vrtg_csn,t2.vrtg_csn,t3.vrtg_csn) as vrtg_csn ,COALESCE(t0.vrtg_max_air,t1.vrtg_max_air,t2.vrtg_max_air,t3.vrtg_max_air) as vrtg_max_air ,COALESCE(t0.vrtg_max_gnd,t1.vrtg_max_gnd,t2.vrtg_max_gnd,t3.vrtg_max_gnd) as vrtg_max_gnd ,COALESCE(t0.vrtg_max_ld,t1.vrtg_max_ld,t2.vrtg_max_ld,t3.vrtg_max_ld) as vrtg_max_ld  from  (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*   from  czods.s_qara_320020_8hz   where   flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'      ) t0  left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*  from  czods.s_qara_320020_8hz   where   flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'     ) t1  on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,* from  czods.s_qara_320020_8hz    where   flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'    ) t2 on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add  left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*   from  czods.s_qara_320020_8hz  where  flt_dt='$fltDt' and flt_dt='$tailNum' and flt_dt='$fileNo'    ) t3  on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add ; ";
+      val sqlDemo =
+        s"""
+           |insert into qara_mid.mid_qara_320020_8hz_fillup
+           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
+           |,COALESCE(t0.bad_sf,t1.bad_sf,t2.bad_sf,t3.bad_sf) as bad_sf
+           |,COALESCE(t0.lift_off,t1.lift_off,t2.lift_off,t3.lift_off) as lift_off
+           |,COALESCE(t0.pad,t1.pad,t2.pad,t3.pad) as pad ,COALESCE(t0.t,t1.t,t2.t,t3.t) as t
+           |,COALESCE(t0.time_stamp,t1.time_stamp,t2.time_stamp,t3.time_stamp) as time_stamp
+           |,COALESCE(t0.time_tag,t1.time_tag,t2.time_tag,t3.time_tag) as time_tag
+           |,COALESCE(t0.touch_down,t1.touch_down,t2.touch_down,t3.touch_down) as touch_down
+           |,COALESCE(t0.turbulence,t1.turbulence,t2.turbulence,t3.turbulence) as turbulence
+           |,COALESCE(t0.value_st,t1.value_st,t2.value_st,t3.value_st) as value_st
+           |,COALESCE(t0.vrtg,t1.vrtg,t2.vrtg,t3.vrtg) as vrtg
+           |,COALESCE(t0.vrtg_avg,t1.vrtg_avg,t2.vrtg_avg,t3.vrtg_avg) as vrtg_avg
+           |,COALESCE(t0.vrtg_csn,t1.vrtg_csn,t2.vrtg_csn,t3.vrtg_csn) as vrtg_csn
+           |,COALESCE(t0.vrtg_max_air,t1.vrtg_max_air,t2.vrtg_max_air,t3.vrtg_max_air) as vrtg_max_air
+           |,COALESCE(t0.vrtg_max_gnd,t1.vrtg_max_gnd,t2.vrtg_max_gnd,t3.vrtg_max_gnd) as vrtg_max_gnd
+           |,COALESCE(t0.vrtg_max_ld,t1.vrtg_max_ld,t2.vrtg_max_ld,t3.vrtg_max_ld)
+           |as vrtg_max_ld  from  (select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*   from  czods.s_qara_320020_8hz
+           |where   flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'      ) t0
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*  from  czods.s_qara_320020_8hz
+           |where   flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'     ) t1  on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
+           |left join   (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,* from  czods.s_qara_320020_8hz
+           |where   flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'    ) t2 on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add
+           |left join  (select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*   from  czods.s_qara_320020_8hz
+           |where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'    ) t3  on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add ;
+           |""".stripMargin
       spark.sql(sqlDemo)
     })
   }
