@@ -64,21 +64,25 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_p5hz_fillup;")
     spark.sql(
     """create table qara_mid.mid_qara_320020_p5hz_fillup (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`time` INT, `time_series` INT,
         |`aie1_rw` INT, `aie2_rw` INT, `aiwl` INT, `aiwr` INT, `ai_faul1` INT, `ai_faul2` INT, `flaprw` FLOAT,
         |`glide_dev1` FLOAT, `glide_dev2` FLOAT, `hyd_l_pres_b` INT, `hyd_l_pres_g` INT, `hyd_l_pres_y` INT,
         |`loc_dev1` FLOAT, `loc_dev2` FLOAT, `n1_epr_cmd1` INT, `n1_epr_cmd2` INT, `n1_mod_sel1` INT,
-        |`n1_mod_sel2` INT, `pck_1_fl_ctl` INT, `pck_2_fl_ctl` INT, `ralt1` FLOAT, `ralt2` FLOAT, `tat` FLOAT
+        |`n1_mod_sel2` INT, `pck_1_fl_ctl` INT, `pck_2_fl_ctl` INT, `ralt1` FLOAT, `ralt2` FLOAT, `tat` FLOAT,
+        |`flt_dt` STRING, `tail_num` STRING,`file_no` STRING
         |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_p5hz_fillup'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_p5hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_p5hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_p5hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
       val sql = s"""
                         |insert into  qara_mid.mid_qara_320020_p5hz_fillup
-                        |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
+                        |select t0.`time`,t0.time_series
                         |,COALESCE(t0.aie1_rw,t1.aie1_rw) as aie1_rw
                         |,COALESCE(t0.aie2_rw,t1.aie2_rw) as aie2_rw
                         |,COALESCE(t0.aiwl,t1.aiwl) as aiwl
@@ -102,6 +106,7 @@ object QarNullSupplementDemo {
                         |,COALESCE(t0.ralt1,t1.ralt1) as ralt1
                         |,COALESCE(t0.ralt2,t1.ralt2) as ralt2
                         |,COALESCE(t0.tat,t1.tat) as tat
+                        |,t0.flt_dt,t0.tail_num,t0.file_no
                         |from
                         |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
                         |    from  czods.s_qara_320020_p5hz
@@ -118,10 +123,7 @@ object QarNullSupplementDemo {
         val sql1 =
           s"""insert into  qara_mid.mid_qara_320020_p25hz_fillup
              |select
-             | file_no
-             |,flt_dt
-             |,tail_num
-             |,`time`
+             |`time`
              |,$i
              |,acms_fp
              |,acv_b_on2
@@ -310,8 +312,11 @@ object QarNullSupplementDemo {
              |,win_spdr
              |,year_curr
              |,year_med
+             |,flt_dt
+             |,tail_num
+             |,file_no
              |from  qara_mid.mid_qara_320020_p25hz_fillup
-             |where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo' and time_series=0 """.stripMargin
+             |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo' and time_series=0 """.stripMargin
         spark.sql(sql1)
       }
 
@@ -322,9 +327,6 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_p25hz_fillup")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_p25hz_fillup (
-        |`file_no` STRING,
-        |`flt_dt` STRING,
-        |`tail_num` STRING,
         |`time` INT, `time_series` INT, `acms_fp` INT,
         |`acv_b_on2` INT, `ac_iden` INT,
         |`ac_tail123` STRING,
@@ -361,10 +363,14 @@ object QarNullSupplementDemo {
         | `tcas_sens_1` INT, `tcas_sens_2` INT, `tcas_sens_3` INT, `tla1_c` FLOAT, `tla2_c` FLOAT, `touch_and_go` FLOAT,
         | `trb1_cool` FLOAT, `trb2_cool` FLOAT, `tt25_l` FLOAT, `tt25_r` FLOAT, `t_inl_prs1` FLOAT, `t_inl_prs2` FLOAT,
         | `t_inl_tmp1` FLOAT, `t_inl_tmp2` FLOAT, `utc_hour` FLOAT, `utc_min_sec` INT, `vor_frq1` FLOAT, `vor_frq2` FLOAT,
-        | `win_spdr` FLOAT, `year_curr` INT, `year_med` FLOAT
+        | `win_spdr` FLOAT, `year_curr` INT, `year_med` FLOAT,
+        | `flt_dt` STRING, `tail_num` STRING,`file_no` STRING
         | ) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         | LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_p25hz_fillup'
         | """.stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_p25hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_p25hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_p25hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString)
       val fltDt = partition.get(0)
@@ -372,8 +378,8 @@ object QarNullSupplementDemo {
       val fileNo = partition.get(2)
       val sql = s"""
                  |insert into  qara_mid.mid_qara_320020_p25hz_fillup
-                 |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
-                 |,COALESCE(t0.acms_fp,t1.acms_fp,t2.acms_fp,t3.acms_fp) as acms_fp,
+                 |select t0.`time`,t0.time_series,
+                 |COALESCE(t0.acms_fp,t1.acms_fp,t2.acms_fp,t3.acms_fp) as acms_fp,
                  |COALESCE(t0.acv_b_on2,t1.acv_b_on2,t2.acv_b_on2,t3.acv_b_on2) as acv_b_on2,
                  |COALESCE(t0.ac_iden,t1.ac_iden,t2.ac_iden,t3.ac_iden) as ac_iden,
                  |COALESCE(t0.ac_tail123,t1.ac_tail123,t2.ac_tail123,t3.ac_tail123) as ac_tail123,
@@ -559,7 +565,8 @@ object QarNullSupplementDemo {
                  |COALESCE(t0.vor_frq2,t1.vor_frq2,t2.vor_frq2,t3.vor_frq2) as vor_frq2,
                  |COALESCE(t0.win_spdr,t1.win_spdr,t2.win_spdr,t3.win_spdr) as win_spdr,
                  |COALESCE(t0.year_curr,t1.year_curr,t2.year_curr,t3.year_curr) as year_curr,
-                 |COALESCE(t0.year_med,t1.year_med,t2.year_med,t3.year_med) as year_med
+                 |COALESCE(t0.year_med,t1.year_med,t2.year_med,t3.year_med) as year_med,
+                 |t0.flt_dt,t0.tail_num,t0.file_no
                  |from
                  |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
                  |    from  czods.s_qara_320020_p25hz
@@ -584,10 +591,8 @@ object QarNullSupplementDemo {
 
       for (i <- 1 to 31) {
         val sql1 = s"""insert into qara_mid.mid_qara_320020_p5hz_fillup
-                     |select `file_no`
-                     |,`flt_dt`
-                     |,`tail_num`
-                     |,`time`
+                     |select
+                     |`time`
                      |,$i
                      |,`aie1_rw`
                      |,`aie2_rw`
@@ -612,8 +617,11 @@ object QarNullSupplementDemo {
                      |,`ralt1`
                      |,`ralt2`
                      |,`tat`
+                     |,`flt_dt`
+                     |,`tail_num`
+                     |,`file_no`
                      |from  qara_mid.mid_qara_320020_p5hz_fillup
-                     |where  flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo' and time_series=0 """.stripMargin
+                     |where  flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo' and time_series=0 """.stripMargin
         spark.sql(sql1)
       }
 
@@ -624,7 +632,7 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_1hz_fillup;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_1hz_fillup (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`time` INT, `time_series` INT,
         |`aapp` INT, `aapp_td` INT, `ac_tail1` STRING, `ac_tail2` STRING, `ac_tail3` STRING,
         |`ac_type` INT, `ac_type_csn` INT, `aie1` INT, `aie2` INT, `aill` FLOAT, `ailr` FLOAT,
         |`air_durn` INT, `aiw` INT, `alpha_floor` INT, `alt_const` FLOAT, `alt_qnh` INT,
@@ -670,10 +678,13 @@ object QarNullSupplementDemo {
         |`fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT,
         |`fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT,
         |`gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT,
-        |`glide_dev_min` FLOAT
+        |`glide_dev_min` FLOAT,`flt_dt` STRING, `tail_num` STRING,`file_no` STRING
         |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_1hz_fillup'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_1hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_1hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_1hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
@@ -683,10 +694,7 @@ object QarNullSupplementDemo {
         s"""
            |insert into  qara_mid.mid_qara_320020_1hz_fillup
            |select
-           |file_no
-           |,flt_dt
-           |,tail_num
-           |,`time`
+           |`time`
            |,1
            |,aapp
            |,aapp_td
@@ -1225,6 +1233,9 @@ object QarNullSupplementDemo {
            |,win_spd_csn
            |,x_air
            |,y_air
+           |,flt_dt
+           |,tail_num
+           |,file_no
            |from  czods.s_qara_320020_1hz
            |where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo' and time_series=0
            |""".stripMargin
@@ -1236,27 +1247,35 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_2hz_fillup_temp;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_2hz_fillup_temp (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`time` INT, `time_series` INT,
         |`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT,
         |`ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT,
         |`roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT,
         |`roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT,
-        |`spoil_rout1` INT,`yaw_faul1` INT, `yaw_faul2` INT
+        |`spoil_rout1` INT,`yaw_faul1` INT, `yaw_faul2` INT,
+        |`flt_dt` STRING, `tail_num` STRING,`file_no` STRING
         |) USING lakesoul PARTITIONED BY (flt_dt, tail_num, file_no)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup_temp'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup_temp alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup_temp alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup_temp alter column file_no drop not null;")
     spark.sql("drop table if exists qara_mid.mid_qara_320020_2hz_fillup;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_2hz_fillup (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT, `time_series` INT,
+        |`time` INT, `time_series` INT,
         |`ck_pitch_cpt` FLOAT, `ck_pitch_fo` FLOAT, `ck_roll_cpt` FLOAT, `ck_roll_fo` FLOAT,
         |`ck_rudd` FLOAT,`pitch_cpt` FLOAT, `pitch_fo` FLOAT, `roll` FLOAT, `roll_abs` FLOAT,
         |`roll_csn` FLOAT,`roll_max_ab500` FLOAT, `roll_max_bl100` FLOAT, `roll_max_bl20` FLOAT,
         |`roll_max_bl500` FLOAT,`rudd` FLOAT, `spoil_gnd_arm` INT, `spoil_lout1` INT, `spoil_rout1` INT,
-        |`yaw_faul1` INT, `yaw_faul2` INT
+        |`yaw_faul1` INT, `yaw_faul2` INT,
+        |`flt_dt` STRING, `tail_num` STRING,`file_no` STRING
         |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_2hz_fillup'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
@@ -1265,7 +1284,28 @@ object QarNullSupplementDemo {
       val sql =
         s"""
            |insert into  qara_mid.mid_qara_320020_2hz_fillup_temp
-           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt) as ck_pitch_cpt,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo) as ck_pitch_fo,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt) as ck_roll_cpt,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo) as ck_roll_fo,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd) as ck_rudd,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt) as pitch_cpt,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo) as pitch_fo,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll) as roll,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs) as roll_abs,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn) as roll_csn,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500) as roll_max_ab500,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100) as roll_max_bl100,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20) as roll_max_bl20,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500) as roll_max_bl500,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd) as rudd,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm) as spoil_gnd_arm,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1) as spoil_lout1,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1) as spoil_rout1,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1) as yaw_faul1,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2) as yaw_faul2
+           |select t0.`time`,t0.time_series
+           |,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt) as ck_pitch_cpt
+           |,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo) as ck_pitch_fo
+           |,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt) as ck_roll_cpt
+           |,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo) as ck_roll_fo
+           |,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd) as ck_rudd
+           |,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt) as pitch_cpt
+           |,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo) as pitch_fo
+           |,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll) as roll
+           |,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs) as roll_abs
+           |,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn) as roll_csn
+           |,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500) as roll_max_ab500
+           |,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100) as roll_max_bl100
+           |,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20) as roll_max_bl20
+           |,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500) as roll_max_bl500
+           |,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd) as rudd
+           |,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm) as spoil_gnd_arm
+           |,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1) as spoil_lout1
+           |,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1) as spoil_rout1
+           |,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1) as yaw_faul1
+           |,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2) as yaw_faul2
+           |,t0.flt_dt,t0.tail_num,t0.file_no
            |from
            |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
            |    from  czods.s_qara_320020_2hz
@@ -1310,50 +1350,50 @@ object QarNullSupplementDemo {
 
       val sql1 = """
                   |insert into  qara_mid.mid_qara_320020_2hz_fillup
-                  |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt,t8.ck_pitch_cpt) as ck_pitch_cpt,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo,t8.ck_pitch_fo) as ck_pitch_fo,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt,t8.ck_roll_cpt) as ck_roll_cpt,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo,t8.ck_roll_fo) as ck_roll_fo,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd,t8.ck_rudd) as ck_rudd,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt,t8.pitch_cpt) as pitch_cpt,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo,t8.pitch_fo) as pitch_fo,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll,t8.roll) as roll,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs,t8.roll_abs) as roll_abs,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn,t8.roll_csn) as roll_csn,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500,t8.roll_max_ab500) as roll_max_ab500,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100,t8.roll_max_bl100) as roll_max_bl100,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20,t8.roll_max_bl20) as roll_max_bl20,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500,t8.roll_max_bl500) as roll_max_bl500,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd,t8.rudd) as rudd,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm,t8.spoil_gnd_arm) as spoil_gnd_arm,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1,t8.spoil_lout1) as spoil_lout1,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1,t8.spoil_rout1) as spoil_rout1,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1,t8.yaw_faul1) as yaw_faul1,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2,t8.yaw_faul2) as yaw_faul2
+                  |select t0.`time`,t0.time_series,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt,t8.ck_pitch_cpt) as ck_pitch_cpt,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo,t8.ck_pitch_fo) as ck_pitch_fo,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt,t8.ck_roll_cpt) as ck_roll_cpt,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo,t8.ck_roll_fo) as ck_roll_fo,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd,t8.ck_rudd) as ck_rudd,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt,t8.pitch_cpt) as pitch_cpt,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo,t8.pitch_fo) as pitch_fo,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll,t8.roll) as roll,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs,t8.roll_abs) as roll_abs,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn,t8.roll_csn) as roll_csn,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500,t8.roll_max_ab500) as roll_max_ab500,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100,t8.roll_max_bl100) as roll_max_bl100,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20,t8.roll_max_bl20) as roll_max_bl20,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500,t8.roll_max_bl500) as roll_max_bl500,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd,t8.rudd) as rudd,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm,t8.spoil_gnd_arm) as spoil_gnd_arm,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1,t8.spoil_lout1) as spoil_lout1,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1,t8.spoil_rout1) as spoil_rout1,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1,t8.yaw_faul1) as yaw_faul1,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2,t8.yaw_faul2) as yaw_faul2,t0.flt_dt,t0.tail_num,t0.file_no
                   |from
                   |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'            ) t0
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'            ) t0
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+1 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t1
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t1
                   |on t0.flt_dt=t1.flt_dt and t0.file_no=t1.file_no and t0.tail_num=t1.tail_num and t0.row_id_add=t1.row_id_add
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+2 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'          ) t2
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'          ) t2
                   |on t0.flt_dt=t2.flt_dt and t0.file_no=t2.file_no and t0.tail_num=t2.tail_num and t0.row_id_add=t2.row_id_add
                   |    left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+3 as row_id_add,*
                   |    from  czods.s_qara_320020_2hz
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t3
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t3
                   |on t0.flt_dt=t3.flt_dt and t0.file_no=t3.file_no and t0.tail_num=t3.tail_num and t0.row_id_add=t3.row_id_add
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+4 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t4
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t4
                   |on t0.flt_dt=t4.flt_dt and t0.file_no=t4.file_no and t0.tail_num=t4.tail_num and t0.row_id_add=t4.row_id_add
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+5 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'          ) t5
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'          ) t5
                   |on t0.flt_dt=t5.flt_dt and t0.file_no=t5.file_no and t0.tail_num=t5.tail_num and t0.row_id_add=t5.row_id_add
                   |    left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+6 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t6
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t6
                   |on t0.flt_dt=t6.flt_dt and t0.file_no=t6.file_no and t0.tail_num=t6.tail_num and t0.row_id_add=t6.row_id_add
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+7 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t7
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t7
                   |on t0.flt_dt=t7.flt_dt and t0.file_no=t7.file_no and t0.tail_num=t7.tail_num and t0.row_id_add=t7.row_id_add
                   |left join
                   |(select (row_number() OVER(PARTITION BY file_no order by `time`,time_series asc )  )+8 as row_id_add,*
                   |    from  qara_mid.mid_qara_320020_2hz_fillup_temp
-                  |    where flt_dt='$fltDt' and tail_um='$tailNum' and file_no='$fileNo'           ) t8
+                  |    where flt_dt='$fltDt' and tail_num='$tailNum' and file_no='$fileNo'           ) t8
                   |on t0.flt_dt=t8.flt_dt and t0.file_no=t8.file_no and t0.tail_num=t8.tail_num and t0.row_id_add=t8.row_id_add""".stripMargin
       spark.sql(sql1)
     })
@@ -1364,17 +1404,21 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_4hz_fillup;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_4hz_fillup (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT,
+        |`time` INT,
         |`time_series` INT,`latg` FLOAT, `latg_csn` FLOAT, `lift_off_pitch1` FLOAT,
         |`lift_off_pitch2` FLOAT, `lift_off_pitch3` FLOAT, `lift_off_pitch4` FLOAT,
         |`lift_off_raltc1` FLOAT, `lift_off_raltc2` FLOAT, `lift_off_raltc3` FLOAT,
         |`lift_off_raltc4` FLOAT,`lift_off_t1` INT, `lift_off_t2` INT, `lift_off_t3` INT,
         |`lift_off_t4` INT,`long` FLOAT, `longc` FLOAT, `long_csn` FLOAT,`pitch` FLOAT,
         |`pitch_csn` FLOAT, `pitch_max_ld` FLOAT, `pitch_max_to` FLOAT,`pitch_ratavgto` FLOAT,
-        |`pitch_rate` FLOAT, `pitch_rate_csn` FLOAT, `pitch_ratmaxto` FLOAT
+        |`pitch_rate` FLOAT, `pitch_rate_csn` FLOAT, `pitch_ratmaxto` FLOAT,
+        |`flt_dt` STRING, `tail_num` STRING, `file_no` STRING
         |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_4hz_fillup'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_4hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_4hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_4hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
@@ -1383,7 +1427,7 @@ object QarNullSupplementDemo {
       val sql =
         s"""
            |insert into  qara_mid.mid_qara_320020_4hz_fillup
-           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series,COALESCE(t0.latg,t1.latg,t2.latg,t3.latg,t4.latg,t5.latg,t6.latg,t7.latg) as latg,COALESCE(t0.latg_csn,t1.latg_csn,t2.latg_csn,t3.latg_csn,t4.latg_csn,t5.latg_csn,t6.latg_csn,t7.latg_csn) as latg_csn,COALESCE(t0.lift_off_pitch1,t1.lift_off_pitch1,t2.lift_off_pitch1,t3.lift_off_pitch1,t4.lift_off_pitch1,t5.lift_off_pitch1,t6.lift_off_pitch1,t7.lift_off_pitch1) as lift_off_pitch1,COALESCE(t0.lift_off_pitch2,t1.lift_off_pitch2,t2.lift_off_pitch2,t3.lift_off_pitch2,t4.lift_off_pitch2,t5.lift_off_pitch2,t6.lift_off_pitch2,t7.lift_off_pitch2) as lift_off_pitch2,COALESCE(t0.lift_off_pitch3,t1.lift_off_pitch3,t2.lift_off_pitch3,t3.lift_off_pitch3,t4.lift_off_pitch3,t5.lift_off_pitch3,t6.lift_off_pitch3,t7.lift_off_pitch3) as lift_off_pitch3,COALESCE(t0.lift_off_pitch4,t1.lift_off_pitch4,t2.lift_off_pitch4,t3.lift_off_pitch4,t4.lift_off_pitch4,t5.lift_off_pitch4,t6.lift_off_pitch4,t7.lift_off_pitch4) as lift_off_pitch4,COALESCE(t0.lift_off_raltc1,t1.lift_off_raltc1,t2.lift_off_raltc1,t3.lift_off_raltc1,t4.lift_off_raltc1,t5.lift_off_raltc1,t6.lift_off_raltc1,t7.lift_off_raltc1) as lift_off_raltc1,COALESCE(t0.lift_off_raltc2,t1.lift_off_raltc2,t2.lift_off_raltc2,t3.lift_off_raltc2,t4.lift_off_raltc2,t5.lift_off_raltc2,t6.lift_off_raltc2,t7.lift_off_raltc2) as lift_off_raltc2,COALESCE(t0.lift_off_raltc3,t1.lift_off_raltc3,t2.lift_off_raltc3,t3.lift_off_raltc3,t4.lift_off_raltc3,t5.lift_off_raltc3,t6.lift_off_raltc3,t7.lift_off_raltc3) as lift_off_raltc3,COALESCE(t0.lift_off_raltc4,t1.lift_off_raltc4,t2.lift_off_raltc4,t3.lift_off_raltc4,t4.lift_off_raltc4,t5.lift_off_raltc4,t6.lift_off_raltc4,t7.lift_off_raltc4) as lift_off_raltc4,COALESCE(t0.lift_off_t1,t1.lift_off_t1,t2.lift_off_t1,t3.lift_off_t1,t4.lift_off_t1,t5.lift_off_t1,t6.lift_off_t1,t7.lift_off_t1) as lift_off_t1,COALESCE(t0.lift_off_t2,t1.lift_off_t2,t2.lift_off_t2,t3.lift_off_t2,t4.lift_off_t2,t5.lift_off_t2,t6.lift_off_t2,t7.lift_off_t2) as lift_off_t2,COALESCE(t0.lift_off_t3,t1.lift_off_t3,t2.lift_off_t3,t3.lift_off_t3,t4.lift_off_t3,t5.lift_off_t3,t6.lift_off_t3,t7.lift_off_t3) as lift_off_t3,COALESCE(t0.lift_off_t4,t1.lift_off_t4,t2.lift_off_t4,t3.lift_off_t4,t4.lift_off_t4,t5.lift_off_t4,t6.lift_off_t4,t7.lift_off_t4) as lift_off_t4,COALESCE(t0.long,t1.long,t2.long,t3.long,t4.long,t5.long,t6.long,t7.long) as long,COALESCE(t0.longc,t1.longc,t2.longc,t3.longc,t4.longc,t5.longc,t6.longc,t7.longc) as longc,COALESCE(t0.long_csn,t1.long_csn,t2.long_csn,t3.long_csn,t4.long_csn,t5.long_csn,t6.long_csn,t7.long_csn) as long_csn,COALESCE(t0.pitch,t1.pitch,t2.pitch,t3.pitch,t4.pitch,t5.pitch,t6.pitch,t7.pitch) as pitch,COALESCE(t0.pitch_csn,t1.pitch_csn,t2.pitch_csn,t3.pitch_csn,t4.pitch_csn,t5.pitch_csn,t6.pitch_csn,t7.pitch_csn) as pitch_csn,COALESCE(t0.pitch_max_ld,t1.pitch_max_ld,t2.pitch_max_ld,t3.pitch_max_ld,t4.pitch_max_ld,t5.pitch_max_ld,t6.pitch_max_ld,t7.pitch_max_ld) as pitch_max_ld,COALESCE(t0.pitch_max_to,t1.pitch_max_to,t2.pitch_max_to,t3.pitch_max_to,t4.pitch_max_to,t5.pitch_max_to,t6.pitch_max_to,t7.pitch_max_to) as pitch_max_to,COALESCE(t0.pitch_ratavgto,t1.pitch_ratavgto,t2.pitch_ratavgto,t3.pitch_ratavgto,t4.pitch_ratavgto,t5.pitch_ratavgto,t6.pitch_ratavgto,t7.pitch_ratavgto) as pitch_ratavgto,COALESCE(t0.pitch_rate,t1.pitch_rate,t2.pitch_rate,t3.pitch_rate,t4.pitch_rate,t5.pitch_rate,t6.pitch_rate,t7.pitch_rate) as pitch_rate,COALESCE(t0.pitch_rate_csn,t1.pitch_rate_csn,t2.pitch_rate_csn,t3.pitch_rate_csn,t4.pitch_rate_csn,t5.pitch_rate_csn,t6.pitch_rate_csn,t7.pitch_rate_csn) as pitch_rate_csn,COALESCE(t0.pitch_ratmaxto,t1.pitch_ratmaxto,t2.pitch_ratmaxto,t3.pitch_ratmaxto,t4.pitch_ratmaxto,t5.pitch_ratmaxto,t6.pitch_ratmaxto,t7.pitch_ratmaxto) as pitch_ratmaxto
+           |select t0.`time`,t0.time_series,COALESCE(t0.latg,t1.latg,t2.latg,t3.latg,t4.latg,t5.latg,t6.latg,t7.latg) as latg,COALESCE(t0.latg_csn,t1.latg_csn,t2.latg_csn,t3.latg_csn,t4.latg_csn,t5.latg_csn,t6.latg_csn,t7.latg_csn) as latg_csn,COALESCE(t0.lift_off_pitch1,t1.lift_off_pitch1,t2.lift_off_pitch1,t3.lift_off_pitch1,t4.lift_off_pitch1,t5.lift_off_pitch1,t6.lift_off_pitch1,t7.lift_off_pitch1) as lift_off_pitch1,COALESCE(t0.lift_off_pitch2,t1.lift_off_pitch2,t2.lift_off_pitch2,t3.lift_off_pitch2,t4.lift_off_pitch2,t5.lift_off_pitch2,t6.lift_off_pitch2,t7.lift_off_pitch2) as lift_off_pitch2,COALESCE(t0.lift_off_pitch3,t1.lift_off_pitch3,t2.lift_off_pitch3,t3.lift_off_pitch3,t4.lift_off_pitch3,t5.lift_off_pitch3,t6.lift_off_pitch3,t7.lift_off_pitch3) as lift_off_pitch3,COALESCE(t0.lift_off_pitch4,t1.lift_off_pitch4,t2.lift_off_pitch4,t3.lift_off_pitch4,t4.lift_off_pitch4,t5.lift_off_pitch4,t6.lift_off_pitch4,t7.lift_off_pitch4) as lift_off_pitch4,COALESCE(t0.lift_off_raltc1,t1.lift_off_raltc1,t2.lift_off_raltc1,t3.lift_off_raltc1,t4.lift_off_raltc1,t5.lift_off_raltc1,t6.lift_off_raltc1,t7.lift_off_raltc1) as lift_off_raltc1,COALESCE(t0.lift_off_raltc2,t1.lift_off_raltc2,t2.lift_off_raltc2,t3.lift_off_raltc2,t4.lift_off_raltc2,t5.lift_off_raltc2,t6.lift_off_raltc2,t7.lift_off_raltc2) as lift_off_raltc2,COALESCE(t0.lift_off_raltc3,t1.lift_off_raltc3,t2.lift_off_raltc3,t3.lift_off_raltc3,t4.lift_off_raltc3,t5.lift_off_raltc3,t6.lift_off_raltc3,t7.lift_off_raltc3) as lift_off_raltc3,COALESCE(t0.lift_off_raltc4,t1.lift_off_raltc4,t2.lift_off_raltc4,t3.lift_off_raltc4,t4.lift_off_raltc4,t5.lift_off_raltc4,t6.lift_off_raltc4,t7.lift_off_raltc4) as lift_off_raltc4,COALESCE(t0.lift_off_t1,t1.lift_off_t1,t2.lift_off_t1,t3.lift_off_t1,t4.lift_off_t1,t5.lift_off_t1,t6.lift_off_t1,t7.lift_off_t1) as lift_off_t1,COALESCE(t0.lift_off_t2,t1.lift_off_t2,t2.lift_off_t2,t3.lift_off_t2,t4.lift_off_t2,t5.lift_off_t2,t6.lift_off_t2,t7.lift_off_t2) as lift_off_t2,COALESCE(t0.lift_off_t3,t1.lift_off_t3,t2.lift_off_t3,t3.lift_off_t3,t4.lift_off_t3,t5.lift_off_t3,t6.lift_off_t3,t7.lift_off_t3) as lift_off_t3,COALESCE(t0.lift_off_t4,t1.lift_off_t4,t2.lift_off_t4,t3.lift_off_t4,t4.lift_off_t4,t5.lift_off_t4,t6.lift_off_t4,t7.lift_off_t4) as lift_off_t4,COALESCE(t0.long,t1.long,t2.long,t3.long,t4.long,t5.long,t6.long,t7.long) as long,COALESCE(t0.longc,t1.longc,t2.longc,t3.longc,t4.longc,t5.longc,t6.longc,t7.longc) as longc,COALESCE(t0.long_csn,t1.long_csn,t2.long_csn,t3.long_csn,t4.long_csn,t5.long_csn,t6.long_csn,t7.long_csn) as long_csn,COALESCE(t0.pitch,t1.pitch,t2.pitch,t3.pitch,t4.pitch,t5.pitch,t6.pitch,t7.pitch) as pitch,COALESCE(t0.pitch_csn,t1.pitch_csn,t2.pitch_csn,t3.pitch_csn,t4.pitch_csn,t5.pitch_csn,t6.pitch_csn,t7.pitch_csn) as pitch_csn,COALESCE(t0.pitch_max_ld,t1.pitch_max_ld,t2.pitch_max_ld,t3.pitch_max_ld,t4.pitch_max_ld,t5.pitch_max_ld,t6.pitch_max_ld,t7.pitch_max_ld) as pitch_max_ld,COALESCE(t0.pitch_max_to,t1.pitch_max_to,t2.pitch_max_to,t3.pitch_max_to,t4.pitch_max_to,t5.pitch_max_to,t6.pitch_max_to,t7.pitch_max_to) as pitch_max_to,COALESCE(t0.pitch_ratavgto,t1.pitch_ratavgto,t2.pitch_ratavgto,t3.pitch_ratavgto,t4.pitch_ratavgto,t5.pitch_ratavgto,t6.pitch_ratavgto,t7.pitch_ratavgto) as pitch_ratavgto,COALESCE(t0.pitch_rate,t1.pitch_rate,t2.pitch_rate,t3.pitch_rate,t4.pitch_rate,t5.pitch_rate,t6.pitch_rate,t7.pitch_rate) as pitch_rate,COALESCE(t0.pitch_rate_csn,t1.pitch_rate_csn,t2.pitch_rate_csn,t3.pitch_rate_csn,t4.pitch_rate_csn,t5.pitch_rate_csn,t6.pitch_rate_csn,t7.pitch_rate_csn) as pitch_rate_csn,COALESCE(t0.pitch_ratmaxto,t1.pitch_ratmaxto,t2.pitch_ratmaxto,t3.pitch_ratmaxto,t4.pitch_ratmaxto,t5.pitch_ratmaxto,t6.pitch_ratmaxto,t7.pitch_ratmaxto) as pitch_ratmaxto,t0.flt_dt,t0.tail_num,t0.file_no
            |from
            |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
            |    from  czods.s_qara_320020_4hz
@@ -1432,14 +1476,18 @@ object QarNullSupplementDemo {
     spark.sql("drop table if exists qara_mid.mid_qara_320020_8hz_fillup;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_8hz_fillup (
-        |`file_no` STRING, `flt_dt` STRING, `tail_num` STRING, `time` INT,
+        |`time` INT,
         |`time_series` INT,`bad_sf` INT, `lift_off` INT, `pad` INT, `t` INT,
         |`time_stamp` INT, `time_tag` INT, `touch_down` INT, `turbulence` INT,
         |`value_st` INT, `vrtg` FLOAT, `vrtg_avg` FLOAT, `vrtg_csn` FLOAT,
-        |`vrtg_max_air` FLOAT, `vrtg_max_gnd` FLOAT, `vrtg_max_ld` FLOAT)
-        |USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
+        |`vrtg_max_air` FLOAT, `vrtg_max_gnd` FLOAT, `vrtg_max_ld` FLOAT,
+        |`flt_dt` STRING, `tail_num` STRING, `file_no` STRING
+        |)USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_8hz_fillup'
         |""".stripMargin)
+    spark.sql("alter table qara_mid.mid_qara_320020_8hz_fillup alter column flt_dt drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_8hz_fillup alter column tail_num drop not null;")
+    spark.sql("alter table qara_mid.mid_qara_320020_8hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
       println("begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
@@ -1448,7 +1496,7 @@ object QarNullSupplementDemo {
       val sql =
         s"""
            |insert into  qara_mid.mid_qara_320020_8hz_fillup
-           |select t0.file_no,t0.flt_dt,t0.tail_num,t0.`time`,t0.time_series
+           |select t0.`time`,t0.time_series
            |,COALESCE(t0.bad_sf,t1.bad_sf,t2.bad_sf,t3.bad_sf) as bad_sf
            |,COALESCE(t0.lift_off,t1.lift_off,t2.lift_off,t3.lift_off) as lift_off
            |,COALESCE(t0.pad,t1.pad,t2.pad,t3.pad) as pad
@@ -1464,6 +1512,7 @@ object QarNullSupplementDemo {
            |,COALESCE(t0.vrtg_max_air,t1.vrtg_max_air,t2.vrtg_max_air,t3.vrtg_max_air) as vrtg_max_air
            |,COALESCE(t0.vrtg_max_gnd,t1.vrtg_max_gnd,t2.vrtg_max_gnd,t3.vrtg_max_gnd) as vrtg_max_gnd
            |,COALESCE(t0.vrtg_max_ld,t1.vrtg_max_ld,t2.vrtg_max_ld,t3.vrtg_max_ld) as vrtg_max_ld
+           |,t0.flt_dt,t0.tail_num,t0.file_no
            |from
            |(select row_number() OVER(PARTITION BY file_no order by `time`,time_series asc ) as row_id_add,*
            |    from  czods.s_qara_320020_8hz
