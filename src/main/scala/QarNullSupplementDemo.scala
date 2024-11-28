@@ -6,6 +6,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.util.{Success, Failure}
 
 
 import java.time.LocalDate
@@ -55,7 +56,7 @@ object QarNullSupplementDemo {
     val needMergePartition = getPartitions("czods.s_qara_320020_1hz", "czcdm.dws_qara_320020_fillup", selectTimeRange)
     spark.sql("use qara_mid")
 
-    val pool = Executors.newFixedThreadPool(6)
+    val pool = Executors.newFixedThreadPool(12)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(pool)
 
     // 提交任务到线程池
@@ -67,18 +68,15 @@ object QarNullSupplementDemo {
     val future6: Future[Unit] = Future(deal8hzTableData(spark, needMergePartition))
 
     // 等待所有任务完成
-    Await.result(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), 5.seconds)
-
-    println("Tasks finished")
-    pool.shutdown()
-    println("Tasks finished finally")
-
-//    dealP25hzTableData(spark, needMergePartition)
-//    dealPH5HZ(spark, needMergePartition)
-//    deal1hzTableData(spark, needMergePartition)
-//    deal2hzTableData(spark, needMergePartition)
-//    deal4hzTableData(spark, needMergePartition)
-//    deal8hzTableData(spark, needMergePartition)
+    val result = Await.ready(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), 36000.seconds)
+    result.onComplete {
+      case Success(_) => {
+        println("All futures completed successfully")
+        pool.shutdown()
+        println("pool shutdown")
+      }
+      case Failure(ex) => println(s"Waiting for futures failed: ${ex.getMessage}")
+    }
 
   }
 
@@ -183,7 +181,7 @@ object QarNullSupplementDemo {
   }
 
   private def dealP25hzTableData(spark: SparkSession, partitionList: util.ArrayList[Row]): Unit = {
-    spark.sql("drop table if exists qara_mid.mid_qara_320020_p25hz_fillup")
+    spark.sql("drop table if exists qara_mid.mid_qara_320020_p25hz_fillup;")
     spark.sql(
       """create table if not exists qara_mid.mid_qara_320020_p25hz_fillup (
         |`time` INT, `time_series` INT, `acms_fp` INT,
