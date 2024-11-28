@@ -4,10 +4,15 @@ import com.dmetasoul.lakesoul.spark.ParametersTool
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.duration._
+
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util
+import java.util.concurrent.Executors
+
 
 object QarNullSupplementDemo {
 
@@ -50,12 +55,30 @@ object QarNullSupplementDemo {
     val needMergePartition = getPartitions("czods.s_qara_320020_1hz", "czcdm.dws_qara_320020_fillup", selectTimeRange)
     spark.sql("use qara_mid")
 
-    dealP25hzTableData(spark, needMergePartition)
-    dealPH5HZ(spark, needMergePartition)
-    deal1hzTableData(spark, needMergePartition)
-    deal2hzTableData(spark, needMergePartition)
-    deal4hzTableData(spark, needMergePartition)
-    deal8hzTableData(spark, needMergePartition)
+    val pool = Executors.newFixedThreadPool(6)
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(pool)
+
+    // 提交任务到线程池
+    val future1: Future[Unit] = Future(dealP25hzTableData(spark, needMergePartition))
+    val future2: Future[Unit] = Future(dealPH5HZ(spark, needMergePartition))
+    val future3: Future[Unit] = Future(deal1hzTableData(spark, needMergePartition))
+    val future4: Future[Unit] = Future(deal2hzTableData(spark, needMergePartition))
+    val future5: Future[Unit] = Future(deal4hzTableData(spark, needMergePartition))
+    val future6: Future[Unit] = Future(deal8hzTableData(spark, needMergePartition))
+
+    // 等待所有任务完成
+    Await.result(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), 5.seconds)
+
+    println("Tasks finished")
+    pool.shutdown()
+    println("Tasks finished finally")
+
+//    dealP25hzTableData(spark, needMergePartition)
+//    dealPH5HZ(spark, needMergePartition)
+//    deal1hzTableData(spark, needMergePartition)
+//    deal2hzTableData(spark, needMergePartition)
+//    deal4hzTableData(spark, needMergePartition)
+//    deal8hzTableData(spark, needMergePartition)
 
   }
 
