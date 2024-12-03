@@ -33,7 +33,7 @@ object QarNullSupplementDemo {
     val parameter = ParametersTool.fromArgs(args)
     val beginDay = parameter.get(BEGIN_TIME)
     val endDay = parameter.get(END_DAY)
-    val batchSize = parameter.getInt(BATCH_SIZE, 10)
+    val batchSize = parameter.getInt(BATCH_SIZE, 50)
     val modelType = "320020"
 
     if (beginDay == null) {
@@ -295,7 +295,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_p25hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_p25hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
-      println("begin deal with tuple: " + partition.toString)
+      println("dealP25hzTableData: begin deal with tuple: " + partition.toString)
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
@@ -766,7 +766,61 @@ object QarNullSupplementDemo {
         |`fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT,
         |`fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT,
         |`gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT,
-        |`glide_dev_min` FLOAT,`flt_dt` STRING, `tail_num` STRING,`file_no` STRING
+        |`glide_dev_min` FLOAT, glide_gap` FLOAT, `glide_ils` FLOAT, `gpws_ctype` INT, `gpws_dont_sink` INT,
+        |`gpws_flap_low` INT, `gpws_gear_low` INT, `gpws_glide` INT, `gpws_mode` INT, `gpws_mode_csn` INT,
+        |`gpws_pull_up` INT, `gpws_sink_rate` INT, `gpws_tr_low` INT, `gpws_tr_up` INT, `gpws_war` INT,
+        |`gpws_wsh_war` INT, `gs` FLOAT, `gsc` FLOAT, `gsc1p` FLOAT, `gsc_csn` FLOAT, `gs_csn` FLOAT,
+        |`gwc` FLOAT, `gw_csn` FLOAT, `gw_landing_lim` FLOAT, `gw_ld` FLOAT, `gw_takeoff_lim` FLOAT,
+        |`gw_taxi_lim` FLOAT, `gw_to` FLOAT, `head` FLOAT, `head_csn` FLOAT, `head_lin` FLOAT, `head_lin_csn` FLOAT,
+        |`head_mag` FLOAT, `head_sel` FLOAT, `head_true` FLOAT, `head_true_csn` FLOAT, `height` FLOAT,
+        |`height_csn` FLOAT, `heig_1conf_chg` FLOAT, `heig_dev_1000` INT, `heig_dev_500` INT, `heig_gear_dw` FLOAT,
+        |`heig_lconf_chg` FLOAT, `hf` INT, `hf_cfa` INT, `hp_fuel_vv_1` INT, `hp_fuel_vv_2` INT, `ias` FLOAT,
+        |`iasc` FLOAT, `iasc_csn` FLOAT, `ias_app_1000` FLOAT, `ias_app_50` FLOAT, `ias_app_500` FLOAT,
+        |`ias_bef_ld` FLOAT, `ias_cl_1000` FLOAT, `ias_cl_500` FLOAT, `ias_csn` FLOAT, `ias_ext_conf1` FLOAT,
+        |`ias_ext_conf2` FLOAT, `ias_ext_conf3` FLOAT, `ias_ext_conf4` FLOAT, `ias_ext_conf5` FLOAT, `ias_ld` FLOAT,
+        |`ias_max` FLOAT, `ias_maxcnf1ld` FLOAT, `ias_maxcnf2ld` FLOAT, `ias_maxcnf3ld` FLOAT, `ias_maxcnf4ld` FLOAT,
+        |`ias_maxcnf5ld` FLOAT, `ias_maxcnf6ld` FLOAT, `ias_maxcnf7ld` FLOAT, `ias_maxcnf8ld` FLOAT,
+        |`ias_maxconf1to` FLOAT, `ias_maxconf2to` FLOAT, `ias_maxconf3to` FLOAT, `ias_maxconf4to` FLOAT,
+        |`ias_maxconf5to` FLOAT, `ias_max_geardw` FLOAT, `ias_min_finapp` FLOAT, `ias_to` FLOAT, `ias_to_50` FLOAT,
+        |`ils_lim` INT, `ils_val` INT, `in_flight` INT, `ivv` FLOAT, `ivv_csn` FLOAT, `ivv_max_bl2000` FLOAT,
+        |`ivv_min_cl35` FLOAT, `ivv_min_cl400` FLOAT, `ivv_sel` FLOAT, `latpc` FLOAT, `latpc_csn` FLOAT,
+        |`lat_air` FLOAT, `ldgl` INT, `ldgl_csn` INT, `ldgnos` INT, `ldgnos_csn` INT, `ldgr` INT, `ldgr_csn` INT,
+        |`ldg_seldw_csn` INT, `ldg_unlokdw` INT, `lift_gnd` INT, `loc_devc` FLOAT, `loc_devc_csn` FLOAT,
+        |`loc_gap` FLOAT, `long_air` FLOAT, `lonpc` FLOAT, `lonpc_csn` FLOAT, `low_press_1` INT, `low_press_2` INT,
+        |`lo_armed` INT, `mach` FLOAT, `mach_buff` FLOAT, `mach_buff_csn` FLOAT, `mach_csn` FLOAT, `mach_max` FLOAT,
+        |`mas_cau` INT, `mas_cau_csn` INT, `mas_war` INT, `max_armed` INT, `med_armed` INT, `min_alt_n1_40` FLOAT,
+        |`min_n1_40` FLOAT, `mmo` FLOAT, `n11c` FLOAT, `n11_csn` FLOAT, `n12c` FLOAT, `n12_csn` FLOAT, `n1_cmd1` FLOAT,
+        |`n1_cmd2` FLOAT, `n1_epr1` INT, `n1_epr2` INT, `n1_max_txo3min` FLOAT, `n1_min_bl500` FLOAT,
+        |`n1_ths_tgt` FLOAT, `n21` FLOAT, `n21c` FLOAT, `n21_csn` FLOAT, `n22` FLOAT, `n22c` FLOAT, `n22_csn` FLOAT,
+        |`oil_qty1_csn` FLOAT, `oil_qty2_csn` FLOAT, `one_eng_app` INT, `origin` STRING, `par_qual` FLOAT,
+        |`pass_no` INT, `pf` INT, `pilot_ld` INT, `pilot_to` INT, `pitch_altr` INT, `ralt1c` FLOAT, `ralt2c` FLOAT,
+        |`raltc` FLOAT, `raltc_csn` FLOAT, `rate` INT, `refused_trans` INT, `relief` FLOAT, `rev_deployd1` INT,
+        |`rev_deployd2` INT, `rev_unlock_1` INT, `rev_unlock_2` INT, `roll_cpt` FLOAT, `roll_fo` FLOAT,
+        |`runway_ld` STRING, `runway_ld_csn` STRING, `runway_to` STRING,
+        |`runway_to_csn` STRING, `sat` FLOAT, `satr_csn` FLOAT, `sf_count` INT, `single_txo` INT,
+        |`slat` FLOAT, `slatc` FLOAT, `slatc_csn` FLOAT, `slatrw` FLOAT, `slat_spd` FLOAT, `smk_avi_war` INT,
+        |`smk_crg_war` INT, `smk_lvy_war` INT, `spd_mach_a_m` INT, `spoil_l2` FLOAT, `spoil_l2c` FLOAT,
+        |`spoil_l4` FLOAT, `spoil_l4c` FLOAT, `spoil_l5` FLOAT, `spoil_l5c` FLOAT, `spoil_r2` FLOAT, `spoil_r2c` FLOAT,
+        |`spoil_r3` FLOAT, `spoil_r3c` FLOAT, `spoil_r5` FLOAT, `spoil_r5c` FLOAT, `spoil_val1` INT, `spoil_val2` INT,
+        |`spoil_val3` INT, `spoil_val4` INT, `spoil_val5` INT, `sstck_cpt_ino` INT, `sstck_fo_ino` INT, `stab` FLOAT,
+        |`stab_ld` INT, `stall_war` INT, `start_analysis` INT, `start_flight` INT, `surf_war` INT, `tail_wind` FLOAT,
+        |`tas` FLOAT, `tas_csn` FLOAT, `tat_csn` FLOAT, `tat_to` FLOAT, `tcas_cmb_ctl` INT, `tcas_crw_sel` INT,
+        |`tcas_dwn_adv` INT, `tcas_rac` INT, `tcas_ra_1` INT, `tcas_ra_10` INT, `tcas_ra_11` INT, `tcas_ra_12` INT,
+        |`tcas_ra_2` INT, `tcas_ra_3` INT, `tcas_ra_4` INT, `tcas_ra_5` INT, `tcas_ra_6` INT, `tcas_ra_7` INT,
+        |`tcas_ra_8` INT, `tcas_ra_9` INT, `tcas_ta` INT, `tcas_ta_1` INT, `tcas_ta_2` INT, `tcas_up_adv` INT,
+        |`tcas_vrt_ctl` INT, `thrust_epr` INT, `thr_deficit` FLOAT, `time_1000` INT, `time_csn` INT,
+        |`time_eng_start` INT, `time_eng_stop` INT, `time_ld` INT, `time_r` INT, `time_r_csn` INT, `time_to` INT,
+        |`tla1` FLOAT, `tla1c` INT, `tla1_csn` FLOAT, `tla2` FLOAT, `tla2c` INT, `tla2_csn` FLOAT, `touch_gnd` INT,
+        |`track_select` FLOAT, `trigger_code` INT, `ttdwn` INT, `v1` FLOAT, `v1_csn` FLOAT, `v2` FLOAT,
+        |`v2_csn` FLOAT, `v2_min` FLOAT, `v2_to` FLOAT, `vapp` FLOAT, `vapp_ld` FLOAT, `vev` FLOAT, `vfe` FLOAT,
+        |`vgdot` FLOAT, `vhf` INT, `vhf_cfa` INT, `vhf_keying_c_csn` INT, `vhf_keying_l_csn` INT,
+        |`vhf_keying_r_csn` INT, `vib_n11_csn` FLOAT, `vib_n12_csn` FLOAT, `vib_n1fnt1` FLOAT, `vib_n1fnt2` FLOAT,
+        |`vib_n21_csn` FLOAT, `vib_n22_csn` FLOAT, `vib_n2fnt1` FLOAT, `vib_n2fnt2` FLOAT, `vls` FLOAT,
+        |`vls_csn` FLOAT, `vmax` FLOAT, `vmo` FLOAT, `vmo_mmo_ovs` INT, `vr` FLOAT, `vref` FLOAT, `vref_csn` FLOAT,
+        |`vr_csn` FLOAT, `vs1g` FLOAT, `wea_alt` FLOAT, `wea_dewpoint` FLOAT, `wea_temp` FLOAT, `wea_valid` INT,
+        |`wea_visib` FLOAT, `wea_windir` FLOAT, `wea_winspd` FLOAT, `win_dir` FLOAT, `win_dir_csn` FLOAT,
+        |`win_spd` FLOAT, `win_spd_csn` FLOAT, `x_air` FLOAT, `y_air` FLOAT,
+        |`flt_dt` STRING, `tail_num` STRING, `file_no` STRING
         |) USING lakesoul PARTITIONED BY (`flt_dt`, `tail_num`, `file_no`)
         |LOCATION 'hdfs://10.64.219.26:9000/flink/warehouse/qara_mid/mid_qara_320020_1hz_fillup'
         |""".stripMargin)
@@ -774,7 +828,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_1hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_1hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
-      println("begin deal with tuple: " + partition.toString());
+      println("deal1hzTableData: begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
@@ -1365,7 +1419,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_2hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
-      println("begin deal with tuple: " + partition.toString());
+      println("deal2hzTableData: begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
@@ -1508,7 +1562,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_4hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_4hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
-      println("begin deal with tuple: " + partition.toString());
+      println("deal4hzTableData: begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
@@ -1577,7 +1631,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_8hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_8hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
-      println("begin deal with tuple: " + partition.toString());
+      println("deal8hzTableData: begin deal with tuple: " + partition.toString());
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
