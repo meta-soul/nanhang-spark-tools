@@ -49,13 +49,6 @@ object QarNullSupplementDemo {
       System.exit(1)
     }
 
-    val timeZone = "Asia/Shanghai"
-
-    val mysqlUrl = "jdbc:mysql://rm-7uq470g1358b7f9u7.mysql.rds.inner.y.csair.com:3306/hive?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=" + timeZone
-    val mysqlUserName = "hive_app"
-    val mysqlPassword = "hi#v2e&8APp"
-    val tableName = "qarfile_merge_record"
-
     val builder = SparkSession.builder()
       .config("spark.sql.parquet.mergeSchema", value = true)
       .config("spark.sql.parquet.filterPushdown", value = true)
@@ -70,6 +63,8 @@ object QarNullSupplementDemo {
 
     val selectTimeRange = getListDay(beginDay, endDay)
     val needMergePartition = getPartitions("czods.s_qara_320020_1hz", "czcdm.dws_qara_320020_fillup", selectTimeRange)
+    import scala.collection.JavaConverters._
+    val needMergePartition_merge = needMergePartition.asScala.toList
     spark.sql("use qara_mid")
 
 
@@ -91,93 +86,63 @@ object QarNullSupplementDemo {
         println("All futures completed successfully")
         pool.shutdown()
         println("pool shutdown")
+        println("start merge")
+
+        val needPartitions = spark.sparkContext.parallelize(needMergePartition_merge)
+        val rows = needPartitions.collect()
+        println("*" * 15 + " need merge partition size: " + rows.length)
+        var size = 0
+        var multiFltDt = ""
+        var multiTailNum = ""
+        var multiFileNo = ""
+        rows.foreach(row => {
+          val fltDt = row.getString(0)
+          val tailNum = row.getString(1)
+          val fileNo = row.getString(2)
+
+          val tableArray = modelToTables(modelType)
+          val tablePath = tableArray(0)
+          val sinkTable = LakeSoulTable.forPath(tablePath)
+
+          multiFltDt = if (multiFltDt == "") "'" + fltDt + "'" else multiFltDt + ", '" + fltDt + "'"
+          multiTailNum = if (multiTailNum == "") "'" + tailNum + "'" else multiTailNum + ", '" + tailNum + "'"
+          multiFileNo = if (multiFileNo == "") "'" + fileNo + "'" else multiFileNo + ", '" + fileNo + "'"
+          size = size + 1
+          if (size == batchSize) {
+            println(dataFormat.format(new Date) + " ---------- start new partition, flt_dt: " + fltDt + ", tail_num: " + tailNum + ", file_no: " + fileNo)
+            for (i <- 1 to tableArray.length - 1) {
+              val tableName = tableArray(i)
+              val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
+              println(sql)
+              val data = spark.sql(sql).toDF()
+              sinkTable.upsert(data)
+            }
+            size = 0
+            multiFltDt = ""
+            multiTailNum = ""
+            multiFileNo = ""
+          }
+        })
+
+        if (size > 0) {
+          val tableArray = modelToTables(modelType)
+          val tablePath = tableArray(0)
+          val sinkTable = LakeSoulTable.forPath(tablePath)
+          for (i <- 1 to tableArray.length - 1) {
+            val tableName = tableArray(i)
+            val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
+            println(sql)
+            val data = spark.sql(sql).toDF()
+            sinkTable.upsert(data)
+          }
+          size = 0
+          multiFltDt = ""
+          multiTailNum = ""
+          multiFileNo = ""
+        }
       }
       case Failure(ex) => println(s"Waiting for futures failed: ${ex.getMessage}")
     }
-
-    println("start merge")
-    val sourceTable = modelToTables(modelType)(1)
-
-    import scala.collection.JavaConverters._
-    val needMergePartition_merge = getPartitions_merge(sourceTable, selectTimeRange).asScala.toList
-    val filterPartitionRDD = spark.sparkContext.parallelize(needMergePartition_merge)
-
-    val mysqlConnectionProperties = new Properties()
-    mysqlConnectionProperties.put("user", mysqlUserName)
-    mysqlConnectionProperties.put("password", mysqlPassword)
-    mysqlConnectionProperties.put("driver", "com.mysql.cj.jdbc.Driver")
-    val mysqlTableData = spark.read.jdbc(mysqlUrl, tableName, mysqlConnectionProperties)
-
-    val mergedPartitions =
-      mysqlTableData
-        .select("flt_dt", "tail_num", "file_no")
-        .filter(s"model_type = $modelType")
-        .filter(s"flt_dt >= '$beginDay' and flt_dt <= '$endDay'")
-    val needPartitions = filterPartitionRDD.subtract(mergedPartitions.rdd)
-
-    val rows = needPartitions.collect()
-    println("*" * 15 + " need merge partition size: " + rows.length)
-    var size = 0
-    var multiFltDt = ""
-    var multiTailNum = ""
-    var multiFileNo = ""
-    var seqList: Seq[(String, String, String, String)] = Seq()
-    rows.foreach(row => {
-      val fltDt = row.getString(0)
-      val tailNum = row.getString(1)
-      val fileNo = row.getString(2)
-
-      val tableArray = modelToTables(modelType)
-      val tablePath = tableArray(0)
-      val sinkTable = LakeSoulTable.forPath(tablePath)
-
-      multiFltDt = if (multiFltDt == "") "'" + fltDt + "'" else multiFltDt + ", '" + fltDt + "'"
-      multiTailNum = if (multiTailNum == "") "'" + tailNum + "'" else multiTailNum + ", '" + tailNum + "'"
-      multiFileNo = if (multiFileNo == "") "'" + fileNo + "'" else multiFileNo + ", '" + fileNo + "'"
-      size = size + 1
-      seqList = seqList :+ (modelType, fltDt, tailNum, fileNo)
-      if (size == batchSize) {
-        println(dataFormat.format(new Date) + " ---------- start new partition, flt_dt: " + fltDt + ", tail_num: " + tailNum + ", file_no: " + fileNo)
-        for (i <- 1 to tableArray.length - 1) {
-          val tableName = tableArray(i)
-          val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
-          println(sql)
-          val data = spark.sql(sql).toDF()
-          sinkTable.upsert(data)
-        }
-        import spark.implicits._
-        val sqlInsert = seqList.toDF("model_type", "flt_dt", "tail_num", "file_no")
-        sqlInsert.write.mode("append").jdbc(mysqlUrl, tableName, mysqlConnectionProperties)
-        size = 0
-        multiFltDt = ""
-        multiTailNum = ""
-        multiFileNo = ""
-        seqList = Seq()
-      }
-    })
-
-    if (size > 0) {
-      val tableArray = modelToTables(modelType)
-      val tablePath = tableArray(0)
-      val sinkTable = LakeSoulTable.forPath(tablePath)
-      for (i <- 1 to tableArray.length - 1) {
-        val tableName = tableArray(i)
-        val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
-        println(sql)
-        val data = spark.sql(sql).toDF()
-        sinkTable.upsert(data)
-      }
-      import spark.implicits._
-      val sqlInsert = seqList.toDF("model_type", "flt_dt", "tail_num", "file_no")
-      sqlInsert.write.mode("append").jdbc(mysqlUrl, tableName, mysqlConnectionProperties)
-      size = 0
-      multiFltDt = ""
-      multiTailNum = ""
-      multiFileNo = ""
-      seqList = Seq()
-    }
-
-
 
   }
 
@@ -1691,29 +1656,6 @@ object QarNullSupplementDemo {
     partitionList
   }
 
-  private def getPartitions_merge(inputTableName: String, dayList: util.List[String]): util.ArrayList[Row] = {
-    val partitionList = new util.ArrayList[Row]
-    val dbManager = new DBManager
-    val inputTableIdent = inputTableName.split("\\.")
-    val inputTableInfo = dbManager.getTableInfoByNameAndNamespace(inputTableIdent(1), inputTableIdent(0))
-    val inputTablePartitionInfo = dbManager.getAllPartitionInfo(inputTableInfo.getTableId)
-    println("============= PartitionInfo size: " + inputTablePartitionInfo.size + " =============")
-    val inputTablePartitionStrList = new util.ArrayList[String]
-    println("============= day list is:" + dayList.toString + " ============= ")
-    dayList.stream.forEach((day: String) => {
-      inputTablePartitionInfo.stream
-        .filter((p: PartitionInfo) => p.getPartitionDesc.contains(day))
-        .forEach((partitionInfo: PartitionInfo) => inputTablePartitionStrList.add(partitionInfo.getPartitionDesc))
-    })
-    println("============= inputTablePartition list size filter days: " + inputTablePartitionStrList.size + " =============")
-    inputTablePartitionStrList.stream.forEach(
-      (info: String) => {
-        val partitionKV = DBUtil.parsePartitionDesc(info)
-        partitionList.add(Row(partitionKV.get("flt_dt"), partitionKV.get("tail_num"), partitionKV.get("file_no")))
-      }
-    )
-    partitionList
-  }
 
   private def getListDay(beginDayStr: String, endDayStr: String): util.ArrayList[String] = {
     val list = new util.ArrayList[String]
