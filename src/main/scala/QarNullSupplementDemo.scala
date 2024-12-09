@@ -68,7 +68,7 @@ object QarNullSupplementDemo {
     spark.sql("use qara_mid")
 
 
-    val pool = Executors.newFixedThreadPool(12)
+    val pool = Executors.newFixedThreadPool(6)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(pool)
 
     // 提交任务到线程池
@@ -766,7 +766,7 @@ object QarNullSupplementDemo {
         |`fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT,
         |`fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT,
         |`gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT,
-        |`glide_dev_min` FLOAT, glide_gap` FLOAT, `glide_ils` FLOAT, `gpws_ctype` INT, `gpws_dont_sink` INT,
+        |`glide_dev_min` FLOAT, `glide_gap` FLOAT, `glide_ils` FLOAT, `gpws_ctype` INT, `gpws_dont_sink` INT,
         |`gpws_flap_low` INT, `gpws_gear_low` INT, `gpws_glide` INT, `gpws_mode` INT, `gpws_mode_csn` INT,
         |`gpws_pull_up` INT, `gpws_sink_rate` INT, `gpws_tr_low` INT, `gpws_tr_up` INT, `gpws_war` INT,
         |`gpws_wsh_war` INT, `gs` FLOAT, `gsc` FLOAT, `gsc1p` FLOAT, `gsc_csn` FLOAT, `gs_csn` FLOAT,
@@ -1490,7 +1490,7 @@ object QarNullSupplementDemo {
            |""".stripMargin
       spark.sql(sql)
 
-      val sql1 = """
+      val sql1 = s"""
                    |insert into  qara_mid.mid_qara_320020_2hz_fillup
                    |select t0.`time`,t0.time_series,COALESCE(t0.ck_pitch_cpt,t1.ck_pitch_cpt,t2.ck_pitch_cpt,t3.ck_pitch_cpt,t4.ck_pitch_cpt,t5.ck_pitch_cpt,t6.ck_pitch_cpt,t7.ck_pitch_cpt,t8.ck_pitch_cpt) as ck_pitch_cpt,COALESCE(t0.ck_pitch_fo,t1.ck_pitch_fo,t2.ck_pitch_fo,t3.ck_pitch_fo,t4.ck_pitch_fo,t5.ck_pitch_fo,t6.ck_pitch_fo,t7.ck_pitch_fo,t8.ck_pitch_fo) as ck_pitch_fo,COALESCE(t0.ck_roll_cpt,t1.ck_roll_cpt,t2.ck_roll_cpt,t3.ck_roll_cpt,t4.ck_roll_cpt,t5.ck_roll_cpt,t6.ck_roll_cpt,t7.ck_roll_cpt,t8.ck_roll_cpt) as ck_roll_cpt,COALESCE(t0.ck_roll_fo,t1.ck_roll_fo,t2.ck_roll_fo,t3.ck_roll_fo,t4.ck_roll_fo,t5.ck_roll_fo,t6.ck_roll_fo,t7.ck_roll_fo,t8.ck_roll_fo) as ck_roll_fo,COALESCE(t0.ck_rudd,t1.ck_rudd,t2.ck_rudd,t3.ck_rudd,t4.ck_rudd,t5.ck_rudd,t6.ck_rudd,t7.ck_rudd,t8.ck_rudd) as ck_rudd,COALESCE(t0.pitch_cpt,t1.pitch_cpt,t2.pitch_cpt,t3.pitch_cpt,t4.pitch_cpt,t5.pitch_cpt,t6.pitch_cpt,t7.pitch_cpt,t8.pitch_cpt) as pitch_cpt,COALESCE(t0.pitch_fo,t1.pitch_fo,t2.pitch_fo,t3.pitch_fo,t4.pitch_fo,t5.pitch_fo,t6.pitch_fo,t7.pitch_fo,t8.pitch_fo) as pitch_fo,COALESCE(t0.roll,t1.roll,t2.roll,t3.roll,t4.roll,t5.roll,t6.roll,t7.roll,t8.roll) as roll,COALESCE(t0.roll_abs,t1.roll_abs,t2.roll_abs,t3.roll_abs,t4.roll_abs,t5.roll_abs,t6.roll_abs,t7.roll_abs,t8.roll_abs) as roll_abs,COALESCE(t0.roll_csn,t1.roll_csn,t2.roll_csn,t3.roll_csn,t4.roll_csn,t5.roll_csn,t6.roll_csn,t7.roll_csn,t8.roll_csn) as roll_csn,COALESCE(t0.roll_max_ab500,t1.roll_max_ab500,t2.roll_max_ab500,t3.roll_max_ab500,t4.roll_max_ab500,t5.roll_max_ab500,t6.roll_max_ab500,t7.roll_max_ab500,t8.roll_max_ab500) as roll_max_ab500,COALESCE(t0.roll_max_bl100,t1.roll_max_bl100,t2.roll_max_bl100,t3.roll_max_bl100,t4.roll_max_bl100,t5.roll_max_bl100,t6.roll_max_bl100,t7.roll_max_bl100,t8.roll_max_bl100) as roll_max_bl100,COALESCE(t0.roll_max_bl20,t1.roll_max_bl20,t2.roll_max_bl20,t3.roll_max_bl20,t4.roll_max_bl20,t5.roll_max_bl20,t6.roll_max_bl20,t7.roll_max_bl20,t8.roll_max_bl20) as roll_max_bl20,COALESCE(t0.roll_max_bl500,t1.roll_max_bl500,t2.roll_max_bl500,t3.roll_max_bl500,t4.roll_max_bl500,t5.roll_max_bl500,t6.roll_max_bl500,t7.roll_max_bl500,t8.roll_max_bl500) as roll_max_bl500,COALESCE(t0.rudd,t1.rudd,t2.rudd,t3.rudd,t4.rudd,t5.rudd,t6.rudd,t7.rudd,t8.rudd) as rudd,COALESCE(t0.spoil_gnd_arm,t1.spoil_gnd_arm,t2.spoil_gnd_arm,t3.spoil_gnd_arm,t4.spoil_gnd_arm,t5.spoil_gnd_arm,t6.spoil_gnd_arm,t7.spoil_gnd_arm,t8.spoil_gnd_arm) as spoil_gnd_arm,COALESCE(t0.spoil_lout1,t1.spoil_lout1,t2.spoil_lout1,t3.spoil_lout1,t4.spoil_lout1,t5.spoil_lout1,t6.spoil_lout1,t7.spoil_lout1,t8.spoil_lout1) as spoil_lout1,COALESCE(t0.spoil_rout1,t1.spoil_rout1,t2.spoil_rout1,t3.spoil_rout1,t4.spoil_rout1,t5.spoil_rout1,t6.spoil_rout1,t7.spoil_rout1,t8.spoil_rout1) as spoil_rout1,COALESCE(t0.yaw_faul1,t1.yaw_faul1,t2.yaw_faul1,t3.yaw_faul1,t4.yaw_faul1,t5.yaw_faul1,t6.yaw_faul1,t7.yaw_faul1,t8.yaw_faul1) as yaw_faul1,COALESCE(t0.yaw_faul2,t1.yaw_faul2,t2.yaw_faul2,t3.yaw_faul2,t4.yaw_faul2,t5.yaw_faul2,t6.yaw_faul2,t7.yaw_faul2,t8.yaw_faul2) as yaw_faul2,t0.flt_dt,t0.tail_num,t0.file_no
                    |from
