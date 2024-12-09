@@ -26,7 +26,7 @@ object QarNullSupplementDemo {
   private val dataFormat: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   private val modelToTables: Map[String, Array[String]] = Map(
-    "320020" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_320020_fillup", "qara_mid.mid_qara_320020_p5hz_fillup", "qara_mid.mid_qara_320020_p25hz_fillup", "qara_mid.mid_qara_320020_1hz_fillup", "qara_mid.mid_qara_320020_2hz_fillup_temp", "qara_mid.mid_qara_320020_4hz_fillupz", "qara_mid.mid_qara_320020_8hz_fillup"),
+    "320020" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_320020_fillup", "qara_mid.mid_qara_320020_p5hz_fillup", "qara_mid.mid_qara_320020_p25hz_fillup", "qara_mid.mid_qara_320020_1hz_fillup", "qara_mid.mid_qara_320020_2hz_fillup", "qara_mid.mid_qara_320020_4hz_fillupz", "qara_mid.mid_qara_320020_8hz_fillup"),
   )
 
   def main(args: Array[String]): Unit = {
@@ -64,7 +64,7 @@ object QarNullSupplementDemo {
     val selectTimeRange = getListDay(beginDay, endDay)
     val needMergePartition = getPartitions("czods.s_qara_320020_1hz", "czcdm.dws_qara_320020_fillup", selectTimeRange)
     import scala.collection.JavaConverters._
-    val needMergePartition_merge = needMergePartition.asScala.toList
+    val needMergePartitionAsScala = needMergePartition.asScala.toList
     spark.sql("use qara_mid")
 
 
@@ -88,14 +88,12 @@ object QarNullSupplementDemo {
         println("pool shutdown")
         println("start merge")
 
-        val needPartitions = spark.sparkContext.parallelize(needMergePartition_merge)
-        val rows = needPartitions.collect()
-        println("*" * 15 + " need merge partition size: " + rows.length)
+        println("*" * 15 + " need merge partition size: " + needMergePartitionAsScala.length)
         var size = 0
         var multiFltDt = ""
         var multiTailNum = ""
         var multiFileNo = ""
-        rows.foreach(row => {
+        needMergePartitionAsScala.foreach(row => {
           val fltDt = row.getString(0)
           val tailNum = row.getString(1)
           val fileNo = row.getString(2)
@@ -164,6 +162,7 @@ object QarNullSupplementDemo {
     spark.sql("alter table qara_mid.mid_qara_320020_p5hz_fillup alter column tail_num drop not null;")
     spark.sql("alter table qara_mid.mid_qara_320020_p5hz_fillup alter column file_no drop not null;")
     partitionList.forEach(partition => {
+      println("dealP5hzTableData: begin deal with tuple: " + partition.toString)
       val fltDt = partition.get(0)
       val tailNum = partition.get(1)
       val fileNo = partition.get(2)
@@ -766,7 +765,7 @@ object QarNullSupplementDemo {
         |`fma_lat` INT, `fma_long` INT, `fpa_selected` FLOAT, `fqty_ld` FLOAT, `fqty_to` FLOAT, `fr_count` INT,
         |`fuel_fire_1` INT, `fuel_fire_2` INT, `gamax1000` FLOAT, `gamax150` FLOAT, `gamax500` FLOAT, `gamin1000` FLOAT,
         |`gamin150` FLOAT, `gamin500` FLOAT, `glide_devc` FLOAT, `glide_devc_csn` FLOAT, `glide_dev_max` FLOAT,
-        |`glide_dev_min` FLOAT, glide_gap` FLOAT, `glide_ils` FLOAT, `gpws_ctype` INT, `gpws_dont_sink` INT,
+        |`glide_dev_min` FLOAT, `glide_gap` FLOAT, `glide_ils` FLOAT, `gpws_ctype` INT, `gpws_dont_sink` INT,
         |`gpws_flap_low` INT, `gpws_gear_low` INT, `gpws_glide` INT, `gpws_mode` INT, `gpws_mode_csn` INT,
         |`gpws_pull_up` INT, `gpws_sink_rate` INT, `gpws_tr_low` INT, `gpws_tr_up` INT, `gpws_war` INT,
         |`gpws_wsh_war` INT, `gs` FLOAT, `gsc` FLOAT, `gsc1p` FLOAT, `gsc_csn` FLOAT, `gs_csn` FLOAT,
