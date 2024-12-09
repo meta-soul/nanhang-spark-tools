@@ -25,12 +25,6 @@
             <artifactId>lakesoul-spark</artifactId>
             <version>3.3-2.6.0-1</version>
             <scope>provided</scope>
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.antlr</groupId>-->
-<!--                    <artifactId>*</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -71,12 +65,6 @@
             <version>8.0.30</version>
         </dependency>
 
-        <!--		<dependency>-->
-        <!--			<groupId>org.apache.spark</groupId>-->
-        <!--			<artifactId>spark-catalyst_${scala.binary.version}</artifactId>-->
-        <!--			<version>${spark.version}</version>-->
-        <!--			<scope>${local.scope}</scope>-->
-        <!--		</dependency>-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-catalyst_${scala.binary.version}</artifactId>
@@ -187,10 +175,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.codehaus.janino</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.glassfish.jersey.containers</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -271,11 +255,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.janino</groupId>
-            <artifactId>janino</artifactId>
-            <version>3.0.8</version>
         </dependency>
     </dependencies>
 
