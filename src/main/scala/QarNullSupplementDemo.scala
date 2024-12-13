@@ -26,7 +26,7 @@ object QarNullSupplementDemo {
   private val dataFormat: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   private val modelToTables: Map[String, Array[String]] = Map(
-    "320020" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_320020_fillup", "qara_mid.mid_qara_320020_p5hz_fillup", "qara_mid.mid_qara_320020_p25hz_fillup", "qara_mid.mid_qara_320020_1hz_fillup", "qara_mid.mid_qara_320020_2hz_fillup", "qara_mid.mid_qara_320020_4hz_fillupz", "qara_mid.mid_qara_320020_8hz_fillup"),
+    "320020" -> Array("hdfs://10.64.219.26:9000/flink/warehouse/czcdm/dws_qara_320020_fillup", "qara_mid.mid_qara_320020_p5hz_fillup", "qara_mid.mid_qara_320020_p25hz_fillup", "qara_mid.mid_qara_320020_1hz_fillup", "qara_mid.mid_qara_320020_2hz_fillup", "qara_mid.mid_qara_320020_4hz_fillup", "qara_mid.mid_qara_320020_8hz_fillup"),
   )
 
   def main(args: Array[String]): Unit = {
@@ -83,36 +83,56 @@ object QarNullSupplementDemo {
     val result = Await.ready(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), 36000.seconds)
     result.onComplete {
       case Success(_) => {
-        println("All futures completed successfully")
-        pool.shutdown()
-        println("pool shutdown")
-        println("start merge")
+        try {
+          println("All futures completed successfully")
+          pool.shutdown()
+          println("pool shutdown")
+          println("start merge")
 
-        println("*" * 15 + " need merge partition size: " + needMergePartitionAsScala.length)
-        var size = 0
-        var multiFltDt = ""
-        var multiTailNum = ""
-        var multiFileNo = ""
-        needMergePartitionAsScala.foreach(row => {
-          val fltDt = row.getString(0)
-          val tailNum = row.getString(1)
-          val fileNo = row.getString(2)
+          println("*" * 15 + " need merge partition size: " + needMergePartitionAsScala.length)
+          var size = 0
+          var multiFltDt = ""
+          var multiTailNum = ""
+          var multiFileNo = ""
+          needMergePartitionAsScala.foreach(row => {
+            val fltDt = row.getString(0)
+            val tailNum = row.getString(1)
+            val fileNo = row.getString(2)
 
-          val tableArray = modelToTables(modelType)
-          val tablePath = tableArray(0)
-          val sinkTable = LakeSoulTable.forPath(tablePath)
+            val tableArray = modelToTables(modelType)
+            val tablePath = tableArray(0)
+            val sinkTable = LakeSoulTable.forPath(tablePath)
 
-          multiFltDt = if (multiFltDt == "") "'" + fltDt + "'" else multiFltDt + ", '" + fltDt + "'"
-          multiTailNum = if (multiTailNum == "") "'" + tailNum + "'" else multiTailNum + ", '" + tailNum + "'"
-          multiFileNo = if (multiFileNo == "") "'" + fileNo + "'" else multiFileNo + ", '" + fileNo + "'"
-          size = size + 1
-          if (size == batchSize) {
-            println(dataFormat.format(new Date) + " ---------- start new partition, flt_dt: " + fltDt + ", tail_num: " + tailNum + ", file_no: " + fileNo)
+            multiFltDt = if (multiFltDt == "") "'" + fltDt + "'" else multiFltDt + ", '" + fltDt + "'"
+            multiTailNum = if (multiTailNum == "") "'" + tailNum + "'" else multiTailNum + ", '" + tailNum + "'"
+            multiFileNo = if (multiFileNo == "") "'" + fileNo + "'" else multiFileNo + ", '" + fileNo + "'"
+            size = size + 1
+            if (size == batchSize) {
+              println(dataFormat.format(new Date) + s""" ---------- start new partition, flt_dt: $multiFltDt + ", tail_num: $multiTailNum + ", file_no: $multiFileNo""")
+              for (i <- 1 to tableArray.length - 1) {
+                val tableName = tableArray(i)
+                val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
+                println(sql)
+                val data = spark.sql(sql).toDF()
+                sinkTable.upsert(data)
+              }
+              size = 0
+              multiFltDt = ""
+              multiTailNum = ""
+              multiFileNo = ""
+            }
+          })
+
+          if (size > 0) {
+            println(dataFormat.format(new Date) + s""" ---------- start new partition, flt_dt: $multiFltDt + ", tail_num: $multiTailNum + ", file_no: $multiFileNo""")
+            val tableArray = modelToTables(modelType)
+            val tablePath = tableArray(0)
+            val sinkTable = LakeSoulTable.forPath(tablePath)
             for (i <- 1 to tableArray.length - 1) {
               val tableName = tableArray(i)
               val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
               println(sql)
-              val data = spark.sql(sql).toDF()
+              val data = spark.sql(sql)
               sinkTable.upsert(data)
             }
             size = 0
@@ -120,28 +140,24 @@ object QarNullSupplementDemo {
             multiTailNum = ""
             multiFileNo = ""
           }
-        })
-
-        if (size > 0) {
-          val tableArray = modelToTables(modelType)
-          val tablePath = tableArray(0)
-          val sinkTable = LakeSoulTable.forPath(tablePath)
-          for (i <- 1 to tableArray.length - 1) {
-            val tableName = tableArray(i)
-            val sql = s"select * from $tableName where flt_dt in ($multiFltDt) and tail_num in ($multiTailNum) and file_no in ($multiFileNo)"
-            println(sql)
-            val data = spark.sql(sql).toDF()
-            sinkTable.upsert(data)
-          }
-          size = 0
-          multiFltDt = ""
-          multiTailNum = ""
-          multiFileNo = ""
+        } catch {
+          case ex: Exception =>
+            throw ex
+        } finally {
+          ThreadSafeMark.changeMark()
         }
       }
-      case Failure(ex) => println(s"Waiting for futures failed: ${ex.getMessage}")
+      case Failure(ex) => {
+        println(s"Waiting for futures failed: ${ex.getMessage}")
+        ThreadSafeMark.changeMark()
+      }
     }
 
+    while (ThreadSafeMark.currentMark()) {
+      println("waiting for other thread running")
+      Thread.sleep(300000)
+    }
+    println("***********  main is over!! ************")
   }
 
 
@@ -1709,7 +1725,6 @@ object QarNullSupplementDemo {
     partitionList
   }
 
-
   private def getListDay(beginDayStr: String, endDayStr: String): util.ArrayList[String] = {
     val list = new util.ArrayList[String]
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -1721,5 +1736,17 @@ object QarNullSupplementDemo {
       date = date.plusDays(1)
     }
     list
+  }
+
+  private object ThreadSafeMark {
+    private var mark = true
+
+    def changeMark(): Unit = synchronized {
+      mark = false
+    }
+
+    def currentMark(): Boolean = synchronized {
+      mark
+    }
   }
 }
