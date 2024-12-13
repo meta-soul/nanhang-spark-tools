@@ -155,7 +155,7 @@ object QarNullSupplementDemo {
 
     while (ThreadSafeMark.currentMark()) {
       println("waiting for other thread running")
-      Thread.sleep(300000)
+      Thread.sleep(60000)
     }
     println("***********  main is over!! ************")
   }
