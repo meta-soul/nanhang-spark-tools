@@ -68,7 +68,7 @@ object QarNullSupplementDemo {
     spark.sql("use qara_mid")
 
 
-    val pool = Executors.newFixedThreadPool(6)
+    val pool = Executors.newFixedThreadPool(12)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(pool)
 
     // 提交任务到线程池
@@ -80,7 +80,7 @@ object QarNullSupplementDemo {
     val future6: Future[Unit] = Future(deal8hzTableData(spark, needMergePartition))
 
     // 等待所有任务完成
-    val result = Await.ready(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), 36000.seconds)
+    val result = Await.ready(Future.sequence(Seq(future1, future2, future3, future4, future5, future6)), Duration.Inf)
     result.onComplete {
       case Success(_) => {
         try {
@@ -157,7 +157,7 @@ object QarNullSupplementDemo {
       println("waiting for other thread running")
       Thread.sleep(60000)
     }
-    println("***********  main is over!! ************")
+    println("***********  " + dataFormat.format(new Date) + " main is over!! ************")
   }
 
 
