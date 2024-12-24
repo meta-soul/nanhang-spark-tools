@@ -71,7 +71,7 @@ object BatchMergeWithSelfInput {
       val newOutputTable = outputTable.split("_")
       val newInputTables = inputTables.split(",")
       val newModelType = newOutputTable.last
-      val newTables = Array(outputTable, newInputTables:_*)
+      val newTables = Array.concat(Array(outputTable), newInputTables)
       updatedModelToTables = updatedModelToTables + (newModelType -> newTables)
       modelType = newModelType
     }
